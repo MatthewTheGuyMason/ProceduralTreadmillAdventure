@@ -13,11 +13,16 @@ public class TileExampleGrid : MonoBehaviour
     [SerializeField]
     private GameObject canvasTilePrefabs;
 
-    public Dictionary<int, TileAdjacencyRules> createdRules;
+    //public Dictionary<int, TileAdjacencyRules> createdRules;
 
     private void Start()
     {
         PlaceCanvasTiles();
+    }
+
+    private void OnDrawGizmos()
+    {
+        
     }
 
     /// <summary>
