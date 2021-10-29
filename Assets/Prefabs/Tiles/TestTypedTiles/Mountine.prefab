@@ -110,7 +110,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: 2
+  tileWeight: 1
+  tileSocketData: {fileID: 11400000, guid: a31070e47e3829541924ef16af98eca1, type: 2}
   tileType: 4
-  gridCoordinates: {x: 0, y: 0, z: 0}
-  slotID: 0
-  socketData: {fileID: 11400000, guid: a31070e47e3829541924ef16af98eca1, type: 2}

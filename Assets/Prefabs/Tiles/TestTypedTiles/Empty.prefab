@@ -45,10 +45,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: 0
+  tileWeight: 0.1
+  tileSocketData: {fileID: 11400000, guid: 390d015709bffd442a356520b1e82f2d, type: 2}
   tileType: 1
-  gridCoordinates: {x: 0, y: 0, z: 0}
-  slotID: 0
-  socketData: {fileID: 11400000, guid: 390d015709bffd442a356520b1e82f2d, type: 2}
 --- !u!65 &5756128819220160158
 BoxCollider:
   m_ObjectHideFlags: 0

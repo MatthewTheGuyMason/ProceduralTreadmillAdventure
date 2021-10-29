@@ -7,15 +7,15 @@ public class SocketData : ScriptableObject
 {
     public enum Sockets
     {
-        Above = 0,
-        Below = 1,
+        Above   = 0,
+        Below   = 1,
 
-        Front = 2,
-        Right = 3,
-        Back = 4,
-        Left = 5,
+        Front   = 2,
+        Right   = 3,
+        Back    = 4,
+        Left    = 5,
 
-        Count = 6
+        Count   = 6
     }
 
     [System.Serializable]

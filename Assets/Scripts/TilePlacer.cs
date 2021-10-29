@@ -31,7 +31,7 @@ public class TilePlacer : MonoBehaviour
                 if (Input.GetMouseButtonDown(0))
                 {
                     Vector3 localNormal = tile.transform.InverseTransformDirection(raycastHit.normal);
-                    Vector3Int placementGridCoordinates = tile.gridCoordinates + new Vector3Int(Mathf.RoundToInt(localNormal.x), Mathf.RoundToInt(localNormal.y), Mathf.RoundToInt(localNormal.z));
+                    Vector3Int placementGridCoordinates = tile.GridCoordinates + new Vector3Int(Mathf.RoundToInt(localNormal.x), Mathf.RoundToInt(localNormal.y), Mathf.RoundToInt(localNormal.z));
                     if (tileGrid.CheckIfGridCoordinatesValid(placementGridCoordinates))
                     {
                         Tile newTile = GameObject.Instantiate(prefabInUse.gameObject, cursorObject.transform.position, cursorObject.transform.rotation).GetComponent<Tile>();

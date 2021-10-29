@@ -45,7 +45,7 @@ public class TileExampleGrid : MonoBehaviour
             for (int j = 0; j < gridDimensions.z; ++j)
             {
                 tileGrid[i][0][j] = GameObject.Instantiate(canvasTilePrefabs, new Vector3(i - (float)gridDimensions.x * 0.5f, 0f, j - (float)gridDimensions.z * 0.5f), transform.rotation).GetComponent<Tile>();
-                tileGrid[i][0][j].gridCoordinates = new Vector3Int(i, 0, j);
+                tileGrid[i][0][j].GridCoordinates = new Vector3Int(i, 0, j);
             }
         }
     }
@@ -55,7 +55,7 @@ public class TileExampleGrid : MonoBehaviour
         if (CheckIfGridCoordinatesValid(gridCoordinates))
         {
             tileGrid[gridCoordinates.x][gridCoordinates.y][gridCoordinates.z] = tileToAdd;
-            tileToAdd.gridCoordinates = gridCoordinates;
+            tileToAdd.GridCoordinates = gridCoordinates;
             return true;
         }
         return false;

@@ -29,6 +29,8 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private Tile[] tileSet;
 
+    
+
 
     private void Start()
     {
@@ -71,6 +73,19 @@ public class TileGrid : MonoBehaviour
                 }
             }
         }
+    }
+
+    private float GetShannonEntropy(List<Tile> possibilitySpace)
+    {
+        float weightSum = 0.0f;
+        float weightTimesLogWeight = 0.0f;
+        for (int i = 0; i < possibilitySpace.Count; ++i)
+        {
+            weightSum += possibilitySpace[i].BaseTileWeight;
+            weightTimesLogWeight += possibilitySpace[i].BaseTileWeight * Mathf.Log(possibilitySpace[0].BaseTileWeight);
+        }
+
+        return Mathf.Log(weightSum) - weightTimesLogWeight / weightSum;
     }
 
     private void WaveFunctionCollapse()
@@ -161,12 +176,12 @@ public class TileGrid : MonoBehaviour
         // Floor tile can't be placed off the floor
         if (yPosition > 0)
         {
-            validTiles.RemoveAll(tile => tile.tileType == Tile.TileType.Floor);
+            validTiles.RemoveAll(tile => tile.TileType == Tile.TileTypes.Floor);
         }
         // Only floor can be placed at floor level
         else
         {
-            validTiles.RemoveAll(tile => tile.tileType != Tile.TileType.Floor);
+            validTiles.RemoveAll(tile => tile.TileType != Tile.TileTypes.Floor);
         }
         // Plant tiles can't be placed next to each other
         for (int x = xPosition - 1; x < xPosition + 1; ++x)
@@ -179,9 +194,9 @@ public class TileGrid : MonoBehaviour
                     {
                         if (tileGrid[x][y][z] != null)
                         {
-                            if (tileGrid[x][y][z].tileType == Tile.TileType.Plant)
+                            if (tileGrid[x][y][z].TileType == Tile.TileTypes.Plant)
                             {
-                                validTiles.RemoveAll(tile => tile.tileType == Tile.TileType.Plant);
+                                validTiles.RemoveAll(tile => tile.TileType == Tile.TileTypes.Plant);
                             }
                         }
 
@@ -196,7 +211,7 @@ public class TileGrid : MonoBehaviour
             if (tileGrid[xPosition][yPosition + 1][zPosition] != null)
             {
                 // Remove all tiles that does not match up with the above socket
-                validTiles.RemoveAll(tile => !tile.socketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].socketData, SocketData.Sockets.Below));
+                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileSocketData, SocketData.Sockets.Below));
             }
         }
         // Check below sockets
@@ -205,7 +220,7 @@ public class TileGrid : MonoBehaviour
             if (tileGrid[xPosition][yPosition - 1][zPosition] != null)
             {
                 // Remove all tiles that does match up with the below socket
-                validTiles.RemoveAll(tile => !tile.socketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].socketData, SocketData.Sockets.Above));
+                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].TileSocketData, SocketData.Sockets.Above));
             }
         }
 
@@ -219,7 +234,28 @@ public class TileGrid : MonoBehaviour
 
     private Tile GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
     {
-        return proabailitySpace[xPosition][yPosition][zPosition][Random.Range(0, proabailitySpace[xPosition][yPosition][zPosition].Count)];
+        // Add together the weightings
+        float maxWeighting = 0.0f;
+        for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        {
+            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight;
+        }
+        // Roll a random number between 0 and the max value
+        float randomNumber = Random.Range(0.0f, maxWeighting);
+
+        // Iterate over the possibility until there is a number between the current total weight and the current total weight
+        float currentWeight = 0.0f;
+        for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        {
+            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight)
+            {
+                return proabailitySpace[xPosition][yPosition][zPosition][i];
+            }
+            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight;
+        }
+        Debug.LogError("No tile able to be selected in probability space");
+        return null;
+        //return proabailitySpace[xPosition][yPosition][zPosition][Random.Range(0, proabailitySpace[xPosition][yPosition][zPosition].Count)];
     }
 
     private void PropergateChangeAcrossTileGrid(int xPosition, int yPosition, int zPosition)
@@ -289,7 +325,8 @@ public class TileGrid : MonoBehaviour
         for (int i = 0; i < gridDimensions.x * gridDimensions.y * gridDimensions.z; ++i)
         {
             // Find the lowest entropy value
-            int lowestEntropyValue = int.MaxValue;
+            float lowestEntropyValue = float.MaxValue;
+            Vector3Int lowestEntropyTilesCoords = Vector3Int.zero;
             for (int x = 0; x < gridDimensions.x; ++x)
             {
                 for (int y = 0; y < gridDimensions.y; ++y)
@@ -300,7 +337,8 @@ public class TileGrid : MonoBehaviour
                         {
                             if (tileGrid[x][y][z] == null)
                             {
-                                lowestEntropyValue = proabailitySpace[x][y][z].Count;
+                                lowestEntropyValue = GetShannonEntropy(proabailitySpace[x][y][z]);
+                                lowestEntropyTilesCoords = new Vector3Int(x, y, z);
                             }
                         }
                     }
@@ -313,29 +351,29 @@ public class TileGrid : MonoBehaviour
             }
 
             // Get all the tile with that level of entropy
-            List<Vector3Int> lowestEntropyTilesCoords = new List<Vector3Int>();
-            for (int x = 0; x < gridDimensions.x; ++x)
-            {
-                for (int y = 0; y < gridDimensions.y; ++y)
-                {
-                    for (int z = 0; z < gridDimensions.z; ++z)
-                    {
-                        if (proabailitySpace[x][y][z].Count == lowestEntropyValue)
-                        {
-                            if (tileGrid[x][y][z] == null)
-                            {
-                                lowestEntropyTilesCoords.Add(new Vector3Int(x, y, z));
-                            }
-                        }
-                    }
-                }
-            }
 
-            // Pick a random tile with the lowest entropy
-            Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
+            //for (int x = 0; x < gridDimensions.x; ++x)
+            //{
+            //    for (int y = 0; y < gridDimensions.y; ++y)
+            //    {
+            //        for (int z = 0; z < gridDimensions.z; ++z)
+            //        {
+            //            if (GetShannonEntropy(proabailitySpace[x][y][z]) == lowestEntropyValue)
+            //            {
+            //                if (tileGrid[x][y][z] == null)
+            //                {
+            //                    lowestEntropyTilesCoords.Add(new Vector3Int(x, y, z));
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+
+            //// Pick a random tile with the lowest entropy
+            //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
-            tileGrid[randomTileCoords.x][randomTileCoords.y][randomTileCoords.z] = GetRandomTileFromProababilitySpace(randomTileCoords.x, randomTileCoords.y, randomTileCoords.z);
-            GameObject.Instantiate(tileGrid[randomTileCoords.x][randomTileCoords.y][randomTileCoords.z].gameObject, new Vector3(randomTileCoords.x, randomTileCoords.y, randomTileCoords.z), transform.rotation, transform);
+            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            GameObject.Instantiate(tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z].gameObject, new Vector3(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform);
 
             // Propagate across to the grid
             UpdateEntireProbalitySpace();
@@ -343,39 +381,6 @@ public class TileGrid : MonoBehaviour
             yield return new WaitForSeconds(0.0f);
         }
     }
+
 }
-
-    ///// <summary>
-    ///// Place all the tiles that the user can use to place down more tiles
-    ///// </summary>
-    //private void PlaceCanvasTiles()
-    //{
-    //    tileGrid = new Tile[gridDimensions.x][][];
-    //    for (int i = 0; i < tileGrid.Length; ++i)
-    //    {
-    //        tileGrid[i] = new Tile[gridDimensions.y][];
-    //        for (int k = 0; k < tileGrid.Length; ++k)
-    //        {
-    //            tileGrid[i][k] = new Tile[gridDimensions.z];
-    //        }
-    //    }
-
-    //    for (int i = 0; i < gridDimensions.x; ++i)
-    //    {
-    //        for (int j = 0; j < gridDimensions.z; ++j)
-    //        {
-    //            tileGrid[i][0][j] = GameObject.Instantiate(canvasTilePrefabs, new Vector3(i - (float)gridDimensions.x * 0.5f, 0f, j - (float)gridDimensions.z * 0.5f), transform.rotation).GetComponent<Tile>();
-    //            tileGrid[i][0][j].gridCoordinates = new Vector3Int(i, 0, j);
-    //        }
-    //    }
-    //}
-
-    //private Tile GetFloorTileFromTileSet()
-    //{
-    //    List<Tile> ApplicableTiles;
-    //    for (int i = 0; i < tileSet.Length; ++i)
-    //    {
-
-    //    }
-    //}
 
