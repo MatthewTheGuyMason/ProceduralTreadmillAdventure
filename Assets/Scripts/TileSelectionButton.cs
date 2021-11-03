@@ -8,11 +8,11 @@ public class TileSelectionButton : MonoBehaviour
 {
     public TilePlacer tilePlacer;
 
-    public Tile tilePrefabContained;
+    public TileComponent tilePrefabContained;
 
     public Button buttonAttachedTo;
 
-    public void Initalise(Tile tilePrefabContained, TilePlacer tilePlacer)
+    public void Initalise(TileComponent tilePrefabContained, TilePlacer tilePlacer)
     {
         this.tilePrefabContained = tilePrefabContained;
         this.tilePlacer = tilePlacer;

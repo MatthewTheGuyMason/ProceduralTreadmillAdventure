@@ -19,7 +19,7 @@ MonoBehaviour:
   backSocket: 0
   leftSocket: 0
   validNeighbours:
-    aboveNeighbours: 00000000
+    aboveNeighbours: 00000000ffffffff
     belowNeighbours: 00000000010000000200000003000000
     frontNeighbours: 
     rightNeighbours: 

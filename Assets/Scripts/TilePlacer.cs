@@ -6,7 +6,7 @@ public class TilePlacer : MonoBehaviour
 {
     public Camera cameraInUse;
 
-    public Tile prefabInUse;
+    public TileComponent prefabInUse;
 
     public TileExampleGrid tileGrid;
 
@@ -24,17 +24,17 @@ public class TilePlacer : MonoBehaviour
         // Ray cast to the grid squares
         if (Physics.Raycast(cameraInUse.ScreenPointToRay(Input.mousePosition), out RaycastHit raycastHit, 100f))
         {
-            if (raycastHit.collider.TryGetComponent<Tile>(out Tile tile))
+            if (raycastHit.collider.TryGetComponent<TileComponent>(out TileComponent tile))
             {
                 cursorObject.transform.position = tile.transform.position + raycastHit.normal;
 
                 if (Input.GetMouseButtonDown(0))
                 {
                     Vector3 localNormal = tile.transform.InverseTransformDirection(raycastHit.normal);
-                    Vector3Int placementGridCoordinates = tile.GridCoordinates + new Vector3Int(Mathf.RoundToInt(localNormal.x), Mathf.RoundToInt(localNormal.y), Mathf.RoundToInt(localNormal.z));
+                    Vector3Int placementGridCoordinates = tile.TileData.GridCoordinates + new Vector3Int(Mathf.RoundToInt(localNormal.x), Mathf.RoundToInt(localNormal.y), Mathf.RoundToInt(localNormal.z));
                     if (tileGrid.CheckIfGridCoordinatesValid(placementGridCoordinates))
                     {
-                        Tile newTile = GameObject.Instantiate(prefabInUse.gameObject, cursorObject.transform.position, cursorObject.transform.rotation).GetComponent<Tile>();
+                        TileData newTile = GameObject.Instantiate(prefabInUse.gameObject, cursorObject.transform.position, cursorObject.transform.rotation).GetComponent<TileData>();
                         tileGrid.TryAddTile(newTile, placementGridCoordinates);
                     }
                 }
@@ -51,7 +51,7 @@ public class TilePlacer : MonoBehaviour
         }
     }
 
-    public void SwitchTilePrefab(Tile tileToUse)
+    public void SwitchTilePrefab(TileComponent tileToUse)
     {
         prefabInUse = tileToUse;
 

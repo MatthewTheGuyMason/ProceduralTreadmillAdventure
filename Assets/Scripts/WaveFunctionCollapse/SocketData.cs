@@ -44,9 +44,9 @@ public class SocketData : ScriptableObject
         switch (otherSocketToCheck)
         {
             case Sockets.Above:
-                return otherSocket.validNeighbours.aboveNeighbours.Contains(belowSocket);
+                return otherSocket.validNeighbours.aboveNeighbours.Contains(belowSocket) && validNeighbours.belowNeighbours.Contains(otherSocket.aboveSocket);
             case Sockets.Below:
-                return otherSocket.validNeighbours.belowNeighbours.Contains(aboveSocket);
+                return otherSocket.validNeighbours.belowNeighbours.Contains(aboveSocket) && validNeighbours.aboveNeighbours.Contains(otherSocket.belowSocket);
             case Sockets.Front:
                 break;
             case Sockets.Right:

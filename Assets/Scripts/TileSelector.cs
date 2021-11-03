@@ -9,7 +9,7 @@ public class TileSelector : MonoBehaviour
 
     public VerticalLayoutGroup layoutGroupForPlacement;
 
-    public List<Tile> placeablePrefabs;
+    public List<TileComponent> placeablePrefabs;
 
     public TilePlacer tilePlacer;
 

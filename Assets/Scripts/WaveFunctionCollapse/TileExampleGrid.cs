@@ -5,7 +5,7 @@ using UnityEngine;
 public class TileExampleGrid : MonoBehaviour
 {
     [SerializeField]
-    private Tile[][][] tileGrid;
+    private TileData[][][] tileGrid;
 
     [SerializeField]
     private Vector3Int gridDimensions;
@@ -30,13 +30,13 @@ public class TileExampleGrid : MonoBehaviour
     /// </summary>
     private void PlaceCanvasTiles()
     {
-        tileGrid = new Tile[gridDimensions.x][][];
+        tileGrid = new TileData[gridDimensions.x][][];
         for (int i = 0; i < tileGrid.Length; ++i)
         {
-            tileGrid[i] = new Tile[gridDimensions.y][];
+            tileGrid[i] = new TileData[gridDimensions.y][];
             for (int k = 0; k < tileGrid.Length; ++k)
             {
-                tileGrid[i][k] = new Tile[gridDimensions.z];
+                tileGrid[i][k] = new TileData[gridDimensions.z];
             }
         }
 
@@ -44,13 +44,13 @@ public class TileExampleGrid : MonoBehaviour
         {
             for (int j = 0; j < gridDimensions.z; ++j)
             {
-                tileGrid[i][0][j] = GameObject.Instantiate(canvasTilePrefabs, new Vector3(i - (float)gridDimensions.x * 0.5f, 0f, j - (float)gridDimensions.z * 0.5f), transform.rotation).GetComponent<Tile>();
+                tileGrid[i][0][j] = GameObject.Instantiate(canvasTilePrefabs, new Vector3(i - (float)gridDimensions.x * 0.5f, 0f, j - (float)gridDimensions.z * 0.5f), transform.rotation).GetComponent<TileData>();
                 tileGrid[i][0][j].GridCoordinates = new Vector3Int(i, 0, j);
             }
         }
     }
 
-    public bool TryAddTile(Tile tileToAdd, Vector3Int gridCoordinates)
+    public bool TryAddTile(TileData tileToAdd, Vector3Int gridCoordinates)
     {
         if (CheckIfGridCoordinatesValid(gridCoordinates))
         {

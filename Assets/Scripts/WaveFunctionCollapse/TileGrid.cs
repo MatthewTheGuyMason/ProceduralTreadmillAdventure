@@ -4,12 +4,10 @@ using UnityEngine;
 
 public class TileGrid : MonoBehaviour
 {
-    // Todo: Make the tiles generate over time
-
-    public class TileComparer : IComparer<Tile>
+    public class TileComparer : IComparer<TileData>
     {
         // Call CaseInsensitiveComparer.Compare with the parameters reversed.
-        int IComparer<Tile>.Compare(Tile x, Tile y)
+        int IComparer<TileData>.Compare(TileData x, TileData y)
         {
             return (x.ID - y.ID);
         }
@@ -18,39 +16,42 @@ public class TileGrid : MonoBehaviour
     }
 
     [SerializeField]
-    private Tile[][][] tileGrid;
+    private TileComponent[][][] tileGrid;
 
     [SerializeField]
-    private List<Tile>[][][] proabailitySpace;
+    private List<TileData>[][][] proabailitySpace;
 
     [SerializeField]
     private Vector3Int gridDimensions;
 
     [SerializeField]
-    private Tile[] tileSet;
+    private TileData[] tileSet;
 
-    
+#if UNITY_EDITOR
+    [SerializeField]
+    private bool showGrid;
+#endif
 
 
     private void Start()
     {
-        tileGrid = new Tile[gridDimensions.x][][];
+        tileGrid = new TileComponent[gridDimensions.x][][];
         for (int i = 0; i < tileGrid.Length; ++i)
         {
-            tileGrid[i] = new Tile[gridDimensions.y][];
+            tileGrid[i] = new TileComponent[gridDimensions.y][];
             for (int k = 0; k < tileGrid[i].Length; ++k)
             {
-                tileGrid[i][k] = new Tile[gridDimensions.z];
+                tileGrid[i][k] = new TileComponent[gridDimensions.z];
             }
         }
 
-        proabailitySpace = new List<Tile>[gridDimensions.x][][];
+        proabailitySpace = new List<TileData>[gridDimensions.x][][];
         for (int i = 0; i < proabailitySpace.Length; ++i)
         {
-            proabailitySpace[i] = new List<Tile>[gridDimensions.y][];
+            proabailitySpace[i] = new List<TileData>[gridDimensions.y][];
             for (int j = 0; j < proabailitySpace[i].Length; ++j)
             {
-                proabailitySpace[i][j] = new List<Tile>[gridDimensions.z];
+                proabailitySpace[i][j] = new List<TileData>[gridDimensions.z];
                 //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
                 //{
                 //    proabailitySpace[i][j][k] = new List<Tile>();
@@ -61,21 +62,26 @@ public class TileGrid : MonoBehaviour
         WaveFunctionCollapse();
     }
 
+#if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        for (int x = 0; x < gridDimensions.x; ++x)
+        if (showGrid)
         {
-            for (int y = 0; y < gridDimensions.y; ++y)
+            for (int x = 0; x < gridDimensions.x; ++x)
             {
-                for (int z = 0; z < gridDimensions.z; ++z)
+                for (int y = 0; y < gridDimensions.y; ++y)
                 {
-                    Gizmos.DrawWireCube(new Vector3(x, y, z), Vector3.one);
+                    for (int z = 0; z < gridDimensions.z; ++z)
+                    {
+                        Gizmos.DrawWireCube(new Vector3(x, y, z), Vector3.one);
+                    }
                 }
             }
         }
     }
+#endif
 
-    private float GetShannonEntropy(List<Tile> possibilitySpace)
+    private float GetShannonEntropy(List<TileData> possibilitySpace)
     {
         float weightSum = 0.0f;
         float weightTimesLogWeight = 0.0f;
@@ -169,41 +175,41 @@ public class TileGrid : MonoBehaviour
         ////}
     }
 
-    private List<Tile> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
+    private List<TileData> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
     {
-        List<Tile> validTiles = new List<Tile>(tileSet);
+        List<TileData> validTiles = new List<TileData>(tileSet);
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
         if (yPosition > 0)
         {
-            validTiles.RemoveAll(tile => tile.TileType == Tile.TileTypes.Floor);
+            validTiles.RemoveAll(tile => tile.TileType == TileData.TileTypes.Floor);
         }
-        // Only floor can be placed at floor level
-        else
-        {
-            validTiles.RemoveAll(tile => tile.TileType != Tile.TileTypes.Floor);
-        }
-        // Plant tiles can't be placed next to each other
-        for (int x = xPosition - 1; x < xPosition + 1; ++x)
-        {
-            for (int y = yPosition - 1; y < yPosition + 1; ++y)
-            {
-                for (int z = zPosition - 1; z < zPosition + 1; ++z)
-                {
-                    if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
-                    {
-                        if (tileGrid[x][y][z] != null)
-                        {
-                            if (tileGrid[x][y][z].TileType == Tile.TileTypes.Plant)
-                            {
-                                validTiles.RemoveAll(tile => tile.TileType == Tile.TileTypes.Plant);
-                            }
-                        }
+        //// Only floor can be placed at floor level
+        //else
+        //{
+        //    validTiles.RemoveAll(tile => tile.TileType != Tile.TileTypes.Floor);
+        //}
+        //// Plant tiles can't be placed next to each other
+        //for (int x = xPosition - 1; x < xPosition + 1; ++x)
+        //{
+        //    for (int y = yPosition - 1; y < yPosition + 1; ++y)
+        //    {
+        //        for (int z = zPosition - 1; z < zPosition + 1; ++z)
+        //        {
+        //            if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
+        //            {
+        //                if (tileGrid[x][y][z] != null)
+        //                {
+        //                    if (tileGrid[x][y][z].TileType == Tile.TileTypes.Plant)
+        //                    {
+        //                        validTiles.RemoveAll(tile => tile.TileType == Tile.TileTypes.Plant);
+        //                    }
+        //                }
 
-                    }
-                }
-            }
-        }
+        //            }
+        //        }
+        //    }
+        //}
 
         // Check the above sockets
         if (gridDimensions.y > yPosition + 1)
@@ -211,8 +217,12 @@ public class TileGrid : MonoBehaviour
             if (tileGrid[xPosition][yPosition + 1][zPosition] != null)
             {
                 // Remove all tiles that does not match up with the above socket
-                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileSocketData, SocketData.Sockets.Below));
+                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileData.TileSocketData, SocketData.Sockets.Below));
             }
+        }
+        else
+        {
+            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.aboveNeighbours.Contains(-1));
         }
         // Check below sockets
         if (yPosition > 0)
@@ -220,8 +230,12 @@ public class TileGrid : MonoBehaviour
             if (tileGrid[xPosition][yPosition - 1][zPosition] != null)
             {
                 // Remove all tiles that does match up with the below socket
-                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].TileSocketData, SocketData.Sockets.Above));
+                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].TileData.TileSocketData, SocketData.Sockets.Above));
             }
+        }
+        else
+        {
+            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.belowNeighbours.Contains(-1));
         }
 
         if (validTiles.Count == 0)
@@ -232,7 +246,7 @@ public class TileGrid : MonoBehaviour
         return validTiles;
     }
 
-    private Tile GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
+    private TileData GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
     {
         // Add together the weightings
         float maxWeighting = 0.0f;
@@ -268,8 +282,8 @@ public class TileGrid : MonoBehaviour
                 {
                     if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
                     {
-                        List<Tile> currentPossiblitySpace = proabailitySpace[xPosition][yPosition][zPosition];
-                        List<Tile> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
+                        List<TileData> currentPossiblitySpace = proabailitySpace[xPosition][yPosition][zPosition];
+                        List<TileData> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
                         currentPossiblitySpace.Sort(new TileComparer());
                         newProabilitySpace.Sort(new TileComparer());
                         if (newProabilitySpace.Count != currentPossiblitySpace.Count)
@@ -372,8 +386,9 @@ public class TileGrid : MonoBehaviour
             //// Pick a random tile with the lowest entropy
             //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
-            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
-            GameObject.Instantiate(tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z].gameObject, new Vector3(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform);
+            TileData newTileData = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = GameObject.Instantiate(tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z], new Vector3(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform);
+
 
             // Propagate across to the grid
             UpdateEntireProbalitySpace();
