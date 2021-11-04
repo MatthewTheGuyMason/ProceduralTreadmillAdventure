@@ -222,7 +222,7 @@ public class TileGrid : MonoBehaviour
         }
         else
         {
-            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.aboveNeighbours.Contains(-1));
+            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.AboveNeighbours.Contains(-1));
         }
         // Check below sockets
         if (yPosition > 0)
@@ -235,7 +235,7 @@ public class TileGrid : MonoBehaviour
         }
         else
         {
-            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.belowNeighbours.Contains(-1));
+            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.BelowNeighbours.Contains(-1));
         }
 
         if (validTiles.Count == 0)

@@ -34,21 +34,22 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     private void OnGUI()
     {
         gridDimensions = EditorGUILayout.Vector3IntField("Grid Dimensions", gridDimensions);
-        gridParent = (GameObject)EditorGUILayout.ObjectField(gridParent, typeof(GameObject), true);
-        defaultTilePrefab = (GameObject)EditorGUILayout.ObjectField(defaultTilePrefab, typeof(GameObject), false);
+        gridParent = (GameObject)EditorGUILayout.ObjectField("Grid Parent GameObject", gridParent, typeof(GameObject), true);
+        defaultTilePrefab = (GameObject)EditorGUILayout.ObjectField("Default Tile Prefab", defaultTilePrefab, typeof(GameObject), false);
 
         int tilePrefabsInUseArraySize = EditorGUILayout.IntField("Tile Prefabs In Use Size", tilePrefabsInUse.Length);
         if (tilePrefabsInUseArraySize != tilePrefabsInUse.Length)
         {
             GameObject[] newArray = new GameObject[tilePrefabsInUseArraySize];
-            tilePrefabsInUse.CopyTo(newArray, 0);
+            int smallestArrayLength = tilePrefabsInUse.Length < tilePrefabsInUseArraySize ? tilePrefabsInUse.Length : tilePrefabsInUseArraySize;
+            System.Array.Copy(tilePrefabsInUse, newArray, smallestArrayLength);
             tilePrefabsInUse = newArray;
         }
-        if (EditorGUILayout.DropdownButton(new GUIContent("Show Tile Prefabs In Use Array"), FocusType.Passive))
+        if (showPrefabsInUseArray = EditorGUILayout.Foldout(showPrefabsInUseArray, "Show Prefabs Array"))
         {
             for (int i = 0; i < tilePrefabsInUseArraySize; ++i)
             {
-                tilePrefabsInUse[i] = (GameObject)EditorGUILayout.ObjectField(gridParent, typeof(GameObject), false);
+                tilePrefabsInUse[i] = (GameObject)EditorGUILayout.ObjectField(tilePrefabsInUse[i], typeof(GameObject), false);
             }
         }
 
@@ -61,8 +62,23 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         }
         if (GUILayout.Button("Generate Build Data"))
         {
-            ExampleGridData exampleGridData = BuildExampleGridData();
+            List<TileComponent> tileComponents = BuildExampleGridData();
 
+            // Create Folder To Store Prefabs
+            AssetDatabase.CreateFolder("Assets", "NewExampleGridDataPrefabs");
+            AssetDatabase.SaveAssets();
+            AssetDatabase.CreateFolder("Assets/NewExampleGridDataPrefabs", "SocketData");
+            AssetDatabase.SaveAssets();
+            List<GameObject> newPrefabs = new List<GameObject>(tileComponents.Count);
+            for (int i = 0; i < tileComponents.Count; ++i)
+            {
+                AssetDatabase.CreateAsset(tileComponents[i].TileData.TileSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + tileComponents[i].gameObject.name + "SocketData.Asset");
+                newPrefabs.Add(PrefabUtility.SaveAsPrefabAsset(tileComponents[i].gameObject, "Assets/NewExampleGridDataPrefabs/" + tileComponents[i].gameObject.name + ".prefab"));
+            }
+
+            ExampleGridData exampleGridData = ExampleGridData.CreateInstance<ExampleGridData>();
+            exampleGridData.tilePrefabs = newPrefabs;
+            AssetDatabase.CreateAsset(exampleGridData, "Assets/NewExampleGridData.asset");
         }
     }
 
@@ -92,20 +108,50 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         }
     }
 
-    private ExampleGridData BuildExampleGridData()
+    private List<TileComponent> BuildExampleGridData()
     {
-        ExampleGridData exampleGridData = new ExampleGridData();
-        exampleGridData.tilePrefabs = new List<GameObject>();
-
         List<TileComponent> currentTileTypes = new List<TileComponent>();
         List<int> currentTileFequency = new List<int>();
+
+        int tileCount = gridDimensions.x * gridDimensions.y * gridDimensions.z;
+
+        // Build the jagged array of tiles
+        tileGrid = new TileComponent[gridDimensions.x][][];
+        for (int i = 0; i < tileGrid.Length; ++i)
+        {
+            tileGrid[i] = new TileComponent[gridDimensions.y][];
+            for (int k = 0; k < tileGrid[i].Length; ++k)
+            {
+                tileGrid[i][k] = new TileComponent[gridDimensions.z];
+            }
+        }
+        int childIndex = 0;
+        if (gridParent.transform.childCount == tileCount)
+        {
+            for (int x = 0; x < gridDimensions.x; ++x)
+            {
+                for (int y = 0; y < gridDimensions.y; ++y)
+                {
+                    for (int z = 0; z < gridDimensions.z; ++z)
+                    {
+                        tileGrid[x][y][z] = gridParent.transform.GetChild(childIndex).GetComponentInChildren<TileComponent>();
+                        ++childIndex;
+                    }
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Grid Parent did not contain enough children for the number of tiles");
+            return null;
+        }
 
         // Iterate over all the tiles
         for (int x = 0; x < gridDimensions.x; ++x)
         {
             for (int y = 0; y < gridDimensions.y; ++y)
             {
-                for (int z = 0; z < gridDimensions.x; ++z)
+                for (int z = 0; z < gridDimensions.z; ++z)
                 {
                     if (gridParent != null)
                     {
@@ -118,25 +164,27 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         {
                             currentTileTypes.Add(currentTile);
                             currentTileFequency.Add(1);
+                            //SocketData newSocketData = SocketData.CreateInstance<SocketData>();
+                            //newSocketData.CopyData(currentTile.TileData.TileSocketData);
+                            currentTile.TileData.TileSocketData = SocketData.CreateInstance<SocketData>();
                         }
                         // Add all the nearby sockets to its lists
-                        AddAllNeighbouringSocketsToTileSocketData(currentTile, gridDimensions);
+                        AddAllNeighbouringSocketsToSocketData(currentTile.TileData.TileSocketData, new Vector3Int(x,y,z));
                     }
                 }
             }
         }
 
         // Assign the weights for each tile type
-        int tileCount = gridDimensions.x * gridDimensions.y * gridDimensions.z;
+
         float weightPerFequency = 1.0f / tileCount;
+
         for (int i = 0; i < currentTileTypes.Count; ++i)
         {
             currentTileTypes[i].TileData.BaseTileWeight = weightPerFequency * currentTileFequency[i];
         }
 
-
-
-        return exampleGridData;
+        return currentTileTypes;
     }
 
     private bool TryGetTileWithMatchingID(List<TileComponent> listToCheck, int IDtoCheckFor, out int index)
@@ -154,70 +202,70 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         return false;
     }
 
-    private void AddAllNeighbouringSocketsToTileSocketData(TileComponent tile, Vector3Int gridCoords)
+    private void AddAllNeighbouringSocketsToSocketData(SocketData socketData, Vector3Int gridCoords)
     {
         // Right Face
         if (gridCoords.x + 1 < gridDimensions.x)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, tile, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, socketData, null);
         }
 
         // Left Face
         if (gridCoords.x - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, tile, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, socketData, null);
         }
 
         // Above Face
         if (gridCoords.y + 1 < gridDimensions.y)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, tile, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, socketData, null);
         }
 
         // Below Face
         if (gridCoords.y - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, tile, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Below, socketData, null);
         }
 
         // Front Face
         if (gridCoords.z + 1 < gridDimensions.z)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, tile, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, socketData, null);
         }
 
         // Back Face
         if (gridCoords.z - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, tile, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, tile, null);
+            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, socketData, null);
         }
     }
 
-    private void AddOpposingSocketToValidSockets(SocketData.Sockets socketDirection, TileComponent tileComponentToAddTo, TileComponent opposingTileComponent)
+    private void AddOpposingSocketToValidSockets(SocketData.Sockets socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
     {
         int opposingID;
         switch (socketDirection)
@@ -225,100 +273,111 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             case SocketData.Sockets.Above:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.belowSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.BelowSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.aboveNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.AboveNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.aboveNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.AboveNeighbours.Add(opposingID);
                 }
                 break;
             case SocketData.Sockets.Below:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.aboveSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.AboveSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.belowNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.BelowNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.belowNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.BelowNeighbours.Add(opposingID);
                 }
                 break;
             case SocketData.Sockets.Front:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.backSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.BackSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.frontNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.FrontNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.frontNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.FrontNeighbours.Add(opposingID);
                 }
                 break;
             case SocketData.Sockets.Right:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.leftSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.LeftSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.rightNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.RightNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.rightNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.RightNeighbours.Add(opposingID);
                 }
                 break;
             case SocketData.Sockets.Back:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.frontSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.FrontSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.backNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.BackNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.backNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.BackNeighbours.Add(opposingID);
                 }
                 break;
             case SocketData.Sockets.Left:
                 if (opposingTileComponent != null)
                 {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.leftSocket;
+                    opposingID = opposingTileComponent.TileData.TileSocketData.LeftSocket;
                 }
                 else
                 {
                     opposingID = -1;
                 }
 
-                if (!tileComponentToAddTo.TileData.TileSocketData.validNeighbours.lefteNeighbours.Contains(opposingID))
+                if (!socketDataToAddTo.validNeighbours.LeftNeighbours.Contains(opposingID))
                 {
-                    tileComponentToAddTo.TileData.TileSocketData.validNeighbours.lefteNeighbours.Add(opposingID);
+                    socketDataToAddTo.validNeighbours.LeftNeighbours.Add(opposingID);
                 }
                 break;
         }
     }
     // Todo 
-    //private bool TryGetTileComponentWithMatchingIdFromPrefabList(List<GameObject> gameObjects, int IdToMatch)
-    //{
-
-    //}
+    private bool TryGetTileComponentWithMatchingIdFromPrefabList(GameObject[] gameObjects, int IdToMatch, out TileComponent tileComponent)
+    {
+        for (int i = 0; i < gameObjects.Length; ++i)
+        {
+            if (gameObjects[i].TryGetComponent<TileComponent>(out tileComponent))
+            {
+                if (tileComponent.TileData.ID == IdToMatch)
+                {
+                    return true;
+                }
+            }
+        }
+        tileComponent = null;
+        return false;
+    }
 
     // TODO: Make sure the window is copying prefab reference rather than scene object reference when creating the editor example data
 }

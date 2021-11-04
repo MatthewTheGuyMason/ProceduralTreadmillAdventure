@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2723064682430182361}
   - component: {fileID: 2723064682430182362}
   - component: {fileID: 2723064682430182363}
-  - component: {fileID: 2723064682430182356}
+  - component: {fileID: 5901409539834274182}
   m_Layer: 0
   m_Name: Mountine
   m_TagString: Untagged
@@ -97,7 +97,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2723064682430182356
+--- !u!114 &5901409539834274182
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,10 +106,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2723064682430182357}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb661e88d17cd164a964e55c11a088db, type: 3}
+  m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  id: 2
-  baseTileWeight: 0.25
-  tileSocketData: {fileID: 11400000, guid: a31070e47e3829541924ef16af98eca1, type: 2}
-  tileType: 4
+  tileData:
+    id: 2
+    baseTileWeight: 0
+    tileSocketData: {fileID: 11400000, guid: a31070e47e3829541924ef16af98eca1, type: 2}
+    tileType: 4

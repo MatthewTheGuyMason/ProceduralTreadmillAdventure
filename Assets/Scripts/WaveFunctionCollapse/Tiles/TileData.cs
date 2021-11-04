@@ -92,6 +92,10 @@ public class TileData
         {
             return tileSocketData;
         }
+        set
+        {
+            tileSocketData = value;
+        }
     }
 
     /// <summary>

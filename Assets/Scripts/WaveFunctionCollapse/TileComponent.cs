@@ -4,21 +4,18 @@ using UnityEngine;
 
 public class TileComponent : MonoBehaviour
 {
+    [SerializeField] [Tooltip("The tile data this tile contains")]
+    private TileData tileData;
+
     public TileData TileData
     {
-        get;
-        set;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        get
+        {
+            return tileData;
+        }
+        set
+        {
+            tileData = value;
+        }
     }
 }
