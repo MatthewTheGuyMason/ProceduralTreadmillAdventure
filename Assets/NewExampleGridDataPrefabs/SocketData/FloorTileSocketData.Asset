@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
-  m_Name: EmptySockets
+  m_Name: FloorTileSocketData
   m_EditorClassIdentifier: 
-  sideSocketIds: 000000000000000000000000000000000000000000000000
+  sideSocketIds: 01000000ffffffff01000000010000000100000001000000
   validNeighbours:
-    aboveNeighbours: 
-    belowNeighbours: 
-    frontNeighbours: 
-    rightNeighbours: 
-    backNeighbours: 
-    leftNeighbours: 
+    aboveNeighbours: 000000000500000004000000
+    belowNeighbours: ffffffff
+    frontNeighbours: 01000000ffffffff
+    rightNeighbours: 01000000ffffffff
+    backNeighbours: ffffffff01000000
+    leftNeighbours: ffffffff01000000

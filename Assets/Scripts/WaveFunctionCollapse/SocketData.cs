@@ -13,7 +13,7 @@ public class SocketData : ScriptableObject
         OnValidate();
     }
 
-    public enum Sockets
+    public enum Sides
     {
         Above   = 0,
         Below   = 1,
@@ -23,87 +23,143 @@ public class SocketData : ScriptableObject
         Back    = 4,
         Left    = 5,
 
-        Count   = 6
+        Count   = 6,
+        Undecided = 7
     }
 
     [System.Serializable]
-    public struct Neighbours
+    public class Neighbours
     {
-        //public List<int> aboveNeighbours;
-        //public List<int> belowNeighbours;
-        //public List<int> frontNeighbours;
-        //public List<int> rightNeighbours;
-        //public List<int> backNeighbours;
-        //public List<int> lefteNeighbours;
+        [SerializeField]
+        private List<int> aboveNeighbours;
+        [SerializeField]
+        private List<int> belowNeighbours;
+        [SerializeField]
+        private List<int> frontNeighbours;
+        [SerializeField]
+        private List<int> rightNeighbours;
+        [SerializeField]
+        private List<int> backNeighbours;
+        [SerializeField]
+        private List<int> leftNeighbours;
 
-        public List<int>[] sideNeighbours;
+        [SerializeField]
+        private List<int>[] allNeighbours; 
 
         public List<int> AboveNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Above];
+                return aboveNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Above] = value;
+                belowNeighbours = value;
             }
         }
         public List<int> BelowNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Below];
+                return belowNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Below] = value;
+                belowNeighbours = value;
             }
         }
         public List<int> FrontNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Front];
+                return frontNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Front] = value;
+                frontNeighbours = value;
             }
         }
         public List<int> RightNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Right];
+                return rightNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Right] = value;
+                rightNeighbours = value;
             }
         }
         public List<int> BackNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Back];
+                return backNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Back] = value;
+                backNeighbours = value;
             }
         }
         public List<int> LeftNeighbours
         {
             get
             {
-                return sideNeighbours[(int)Sockets.Left];
+                return leftNeighbours;
             }
             set
             {
-                sideNeighbours[(int)Sockets.Left] = value;
+                leftNeighbours = value;
             }
         }
+
+        public Neighbours()
+        {
+            aboveNeighbours = new List<int>();
+            belowNeighbours = new List<int>();
+            frontNeighbours = new List<int>();
+            rightNeighbours = new List<int>();
+            backNeighbours  = new List<int>();
+            leftNeighbours  = new List<int>();
+
+            allNeighbours = new List<int>[(int)Sides.Count];
+            allNeighbours[(int)Sides.Above] = aboveNeighbours;
+            allNeighbours[(int)Sides.Below] = belowNeighbours;
+            allNeighbours[(int)Sides.Front] = frontNeighbours;
+            allNeighbours[(int)Sides.Right] = rightNeighbours;
+            allNeighbours[(int)Sides.Back] = backNeighbours;
+            allNeighbours[(int)Sides.Left] = leftNeighbours;
+        }
+
+        public List<int> GetValidNeighbourListForSide(Sides side)
+        {
+            return allNeighbours[(int)side];
+        }
+    }
+
+    /// <summary>
+    /// Returns a socket on the opposite side to the opposing socket
+    /// </summary>
+    /// <param name="sideType">The side to get the side at the other side of</param>
+    /// <returns>a socket on the opposite side to the opposing socket</returns>
+    public static Sides GetOpposingSocket(Sides sideType)
+    {
+        switch (sideType)
+        {
+            case Sides.Above:
+                return Sides.Below;
+            case Sides.Below:
+                return Sides.Above;
+            case Sides.Front:
+                return Sides.Back;
+            case Sides.Right:
+                return Sides.Left;
+            case Sides.Back:
+                return Sides.Front;
+            case Sides.Left:
+                return Sides.Right;
+        }
+        return Sides.Undecided;
     }
 
     public int[] sideSocketIds;
@@ -112,92 +168,79 @@ public class SocketData : ScriptableObject
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Above];
+            return sideSocketIds[(int)Sides.Above];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Above] = value;
+            sideSocketIds[(int)Sides.Above] = value;
         }
     }
     public int BelowSocket
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Below];
+            return sideSocketIds[(int)Sides.Below];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Below] = value;
+            sideSocketIds[(int)Sides.Below] = value;
         }
     }
     public int FrontSocket
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Front];
+            return sideSocketIds[(int)Sides.Front];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Front] = value;
+            sideSocketIds[(int)Sides.Front] = value;
         }
     }
     public int RightSocket
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Right];
+            return sideSocketIds[(int)Sides.Right];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Right] = value;
+            sideSocketIds[(int)Sides.Right] = value;
         }
     }
     public int BackSocket
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Back];
+            return sideSocketIds[(int)Sides.Back];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Back] = value;
+            sideSocketIds[(int)Sides.Back] = value;
         }
     }
     public int LeftSocket
     {
         get
         {
-            return sideSocketIds[(int)Sockets.Left];
+            return sideSocketIds[(int)Sides.Left];
         }
         set
         {
-            sideSocketIds[(int)Sockets.Left] = value;
+            sideSocketIds[(int)Sides.Left] = value;
         }
     }
 
     public Neighbours validNeighbours;
 
-    public bool CheckValidSocketConnection(SocketData otherSocket, Sockets otherSocketToCheck)
+    public int GetIdOfSide(Sides side)
     {
-        switch (otherSocketToCheck)
-        {
-            case Sockets.Above:
-                return otherSocket.validNeighbours.AboveNeighbours.Contains(BelowSocket) && validNeighbours.BelowNeighbours.Contains(otherSocket.AboveSocket);
-            case Sockets.Below:
-                return otherSocket.validNeighbours.BelowNeighbours.Contains(AboveSocket) && validNeighbours.AboveNeighbours.Contains(otherSocket.BelowSocket);
-            case Sockets.Front:
-                break;
-            case Sockets.Right:
-                break;
-            case Sockets.Back:
-                break;
-            case Sockets.Left:
-                break;
-            case Sockets.Count:
-                break;
-        }
+        return sideSocketIds[(int)side];
+    }
 
-        return false;
+    public bool CheckValidSocketConnection(SocketData otherSocket, Sides otherSocketToCheck)
+    {
+        return otherSocket.validNeighbours.GetValidNeighbourListForSide(otherSocketToCheck).Contains(GetIdOfSide(GetOpposingSocket(otherSocketToCheck)));
     }
 
     public void CopyData(SocketData socketDataToCopy)
@@ -209,6 +252,11 @@ public class SocketData : ScriptableObject
         validNeighbours.BackNeighbours  = new List<int>(socketDataToCopy.validNeighbours.BackNeighbours);
         validNeighbours.LeftNeighbours = new List<int>(socketDataToCopy.validNeighbours.LeftNeighbours);
 
+        CopySocketIDs(socketDataToCopy);
+    }
+
+    public void CopySocketIDs(SocketData socketDataToCopy)
+    {
         AboveSocket = socketDataToCopy.AboveSocket;
         BelowSocket = socketDataToCopy.BelowSocket;
         FrontSocket = socketDataToCopy.FrontSocket;
@@ -217,25 +265,35 @@ public class SocketData : ScriptableObject
         LeftSocket = socketDataToCopy.LeftSocket;
     }
 
+    public static Vector3Int GetCooridnateOffSetForSide(Sides socketsSide)
+    {
+        switch (socketsSide)
+        {
+            case Sides.Above:
+                return Vector3Int.up;
+            case Sides.Below:
+                return Vector3Int.down;
+            case Sides.Front:
+                return Vector3Int.forward;
+            case Sides.Right:
+                return Vector3Int.right;
+            case Sides.Back:
+                return Vector3Int.back;
+            case Sides.Left:
+                return Vector3Int.left;
+        }
+        return Vector3Int.zero;
+    }
+
     private void OnValidate()
     {
-        if (validNeighbours.sideNeighbours == null)
+        if (validNeighbours == null)
         {
-            validNeighbours.sideNeighbours = new List<int>[(int)Sockets.Count];
-
+            validNeighbours = new Neighbours();
         }
-        for (int i = 0; i < (int)Sockets.Count; ++i)
-        {
-
-            if (validNeighbours.sideNeighbours[i] == null)
-            {
-                validNeighbours.sideNeighbours[i] = new List<int>();
-            }
-        }
-
         if (sideSocketIds == null)
         {
-            sideSocketIds = new int[(int)Sockets.Count];
+            sideSocketIds = new int[(int)Sides.Count];
         }
     }
 }

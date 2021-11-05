@@ -159,17 +159,19 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         if (TryGetTileWithMatchingID(currentTileTypes, currentTile.TileData.ID, out int index))
                         {
                             ++currentTileFequency[index];
+                            AddAllNeighbouringSocketsToSocketData(currentTileTypes[index].TileData.TileSocketData, new Vector3Int(x, y, z));
                         }
                         else
                         {
                             currentTileTypes.Add(currentTile);
                             currentTileFequency.Add(1);
-                            //SocketData newSocketData = SocketData.CreateInstance<SocketData>();
-                            //newSocketData.CopyData(currentTile.TileData.TileSocketData);
-                            currentTile.TileData.TileSocketData = SocketData.CreateInstance<SocketData>();
+                            SocketData newSocketData = SocketData.CreateInstance<SocketData>();
+                            newSocketData.CopySocketIDs(currentTile.TileData.TileSocketData);
+                            currentTile.TileData.TileSocketData = newSocketData;
+                            AddAllNeighbouringSocketsToSocketData(currentTile.TileData.TileSocketData, new Vector3Int(x, y, z));
                         }
                         // Add all the nearby sockets to its lists
-                        AddAllNeighbouringSocketsToSocketData(currentTile.TileData.TileSocketData, new Vector3Int(x,y,z));
+
                     }
                 }
             }
@@ -207,159 +209,81 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         // Right Face
         if (gridCoords.x + 1 < gridDimensions.x)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Right, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, null);
         }
 
         // Left Face
         if (gridCoords.x - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Left, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, null);
         }
 
         // Above Face
         if (gridCoords.y + 1 < gridDimensions.y)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Above, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, null);
         }
 
         // Below Face
         if (gridCoords.y - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Below, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, null);
         }
 
         // Front Face
         if (gridCoords.z + 1 < gridDimensions.z)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Front, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, null);
         }
 
         // Back Face
         if (gridCoords.z - 1 > -1)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
         }
         else
         {
-            AddOpposingSocketToValidSockets(SocketData.Sockets.Back, socketData, null);
+            AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, null);
         }
     }
 
-    private void AddOpposingSocketToValidSockets(SocketData.Sockets socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
+    private void AddOpposingSocketToValidSockets(SocketData.Sides socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
     {
         int opposingID;
-        switch (socketDirection)
+        if (opposingTileComponent != null)
         {
-            case SocketData.Sockets.Above:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.BelowSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
+            opposingID = opposingTileComponent.TileData.TileSocketData.GetIdOfSide(SocketData.GetOpposingSocket(socketDirection));
+        }
+        else
+        {
+            opposingID = -1;
+        }
 
-                if (!socketDataToAddTo.validNeighbours.AboveNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.AboveNeighbours.Add(opposingID);
-                }
-                break;
-            case SocketData.Sockets.Below:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.AboveSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
+        List<int> validNeighbourList = socketDataToAddTo.validNeighbours.GetValidNeighbourListForSide(socketDirection);
 
-                if (!socketDataToAddTo.validNeighbours.BelowNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.BelowNeighbours.Add(opposingID);
-                }
-                break;
-            case SocketData.Sockets.Front:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.BackSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
-
-                if (!socketDataToAddTo.validNeighbours.FrontNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.FrontNeighbours.Add(opposingID);
-                }
-                break;
-            case SocketData.Sockets.Right:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.LeftSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
-
-                if (!socketDataToAddTo.validNeighbours.RightNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.RightNeighbours.Add(opposingID);
-                }
-                break;
-            case SocketData.Sockets.Back:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.FrontSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
-
-                if (!socketDataToAddTo.validNeighbours.BackNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.BackNeighbours.Add(opposingID);
-                }
-                break;
-            case SocketData.Sockets.Left:
-                if (opposingTileComponent != null)
-                {
-                    opposingID = opposingTileComponent.TileData.TileSocketData.LeftSocket;
-                }
-                else
-                {
-                    opposingID = -1;
-                }
-
-                if (!socketDataToAddTo.validNeighbours.LeftNeighbours.Contains(opposingID))
-                {
-                    socketDataToAddTo.validNeighbours.LeftNeighbours.Add(opposingID);
-                }
-                break;
+        if (!validNeighbourList.Contains(opposingID))
+        {
+            validNeighbourList.Add(opposingID);
         }
     }
     // Todo 

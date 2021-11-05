@@ -12,16 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
   m_Name: PlantSocketsData
   m_EditorClassIdentifier: 
-  aboveSocket: 3
-  belowSocket: 5
-  frontSocket: 0
-  rightSocket: 0
-  backSocket: 0
-  leftSocket: 0
+  sideSocketIds: 030000000500000007000000070000000700000007000000
   validNeighbours:
     aboveNeighbours: 0000000005000000
     belowNeighbours: 010000000200000003000000
     frontNeighbours: 
     rightNeighbours: 
     backNeighbours: 
-    lefteNeighbours: 
+    leftNeighbours: 

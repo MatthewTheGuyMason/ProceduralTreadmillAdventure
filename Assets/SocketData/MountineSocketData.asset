@@ -12,16 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
   m_Name: MountineSocketData
   m_EditorClassIdentifier: 
-  aboveSocket: 2
-  belowSocket: 4
-  frontSocket: 0
-  rightSocket: 0
-  backSocket: 0
-  leftSocket: 0
+  sideSocketIds: 020000000400000006000000060000000600000006000000
   validNeighbours:
     aboveNeighbours: 000000000400000005000000
     belowNeighbours: 0100000002000000
     frontNeighbours: 
     rightNeighbours: 
     backNeighbours: 
-    lefteNeighbours: 
+    leftNeighbours: 

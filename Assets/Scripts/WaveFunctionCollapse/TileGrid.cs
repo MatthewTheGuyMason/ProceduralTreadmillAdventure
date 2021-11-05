@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class TileGrid : MonoBehaviour
 {
-    public class TileComparer : IComparer<TileData>
+    public class TileComparer : IComparer<TileComponent>
     {
-        // Call CaseInsensitiveComparer.Compare with the parameters reversed.
-        int IComparer<TileData>.Compare(TileData x, TileData y)
+        int IComparer<TileComponent>.Compare(TileComponent x, TileComponent y)
         {
-            return (x.ID - y.ID);
+            return (x.TileData.ID - y.TileData.ID);
         }
 
         //
@@ -19,13 +18,13 @@ public class TileGrid : MonoBehaviour
     private TileComponent[][][] tileGrid;
 
     [SerializeField]
-    private List<TileData>[][][] proabailitySpace;
+    private List<TileComponent>[][][] proabailitySpace;
 
     [SerializeField]
     private Vector3Int gridDimensions;
 
     [SerializeField]
-    private TileData[] tileSet;
+    private TileComponent[] tileSet;
 
 #if UNITY_EDITOR
     [SerializeField]
@@ -45,13 +44,13 @@ public class TileGrid : MonoBehaviour
             }
         }
 
-        proabailitySpace = new List<TileData>[gridDimensions.x][][];
+        proabailitySpace = new List<TileComponent>[gridDimensions.x][][];
         for (int i = 0; i < proabailitySpace.Length; ++i)
         {
-            proabailitySpace[i] = new List<TileData>[gridDimensions.y][];
+            proabailitySpace[i] = new List<TileComponent>[gridDimensions.y][];
             for (int j = 0; j < proabailitySpace[i].Length; ++j)
             {
-                proabailitySpace[i][j] = new List<TileData>[gridDimensions.z];
+                proabailitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
                 //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
                 //{
                 //    proabailitySpace[i][j][k] = new List<Tile>();
@@ -81,14 +80,14 @@ public class TileGrid : MonoBehaviour
     }
 #endif
 
-    private float GetShannonEntropy(List<TileData> possibilitySpace)
+    private float GetShannonEntropy(List<TileComponent> possibilitySpace)
     {
         float weightSum = 0.0f;
         float weightTimesLogWeight = 0.0f;
         for (int i = 0; i < possibilitySpace.Count; ++i)
         {
-            weightSum += possibilitySpace[i].BaseTileWeight;
-            weightTimesLogWeight += possibilitySpace[i].BaseTileWeight * Mathf.Log(possibilitySpace[0].BaseTileWeight);
+            weightSum += possibilitySpace[i].TileData.BaseTileWeight;
+            weightTimesLogWeight += possibilitySpace[i].TileData.BaseTileWeight * Mathf.Log(possibilitySpace[0].TileData.BaseTileWeight);
         }
 
         return Mathf.Log(weightSum) - weightTimesLogWeight / weightSum;
@@ -175,14 +174,14 @@ public class TileGrid : MonoBehaviour
         ////}
     }
 
-    private List<TileData> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
+    private List<TileComponent> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
     {
-        List<TileData> validTiles = new List<TileData>(tileSet);
+        List<TileComponent> validTiles = new List<TileComponent>(tileSet);
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
         if (yPosition > 0)
         {
-            validTiles.RemoveAll(tile => tile.TileType == TileData.TileTypes.Floor);
+            validTiles.RemoveAll(tile => tile.TileData.TileType == TileData.TileTypes.Floor);
         }
         //// Only floor can be placed at floor level
         //else
@@ -211,48 +210,69 @@ public class TileGrid : MonoBehaviour
         //    }
         //}
 
-        // Check the above sockets
-        if (gridDimensions.y > yPosition + 1)
-        {
-            if (tileGrid[xPosition][yPosition + 1][zPosition] != null)
-            {
-                // Remove all tiles that does not match up with the above socket
-                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileData.TileSocketData, SocketData.Sockets.Below));
-            }
-        }
-        else
-        {
-            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.AboveNeighbours.Contains(-1));
-        }
-        // Check below sockets
-        if (yPosition > 0)
-        {
-            if (tileGrid[xPosition][yPosition - 1][zPosition] != null)
-            {
-                // Remove all tiles that does match up with the below socket
-                validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].TileData.TileSocketData, SocketData.Sockets.Above));
-            }
-        }
-        else
-        {
-            validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.BelowNeighbours.Contains(-1));
-        }
+        //Vector3Int position = new Vector3Int(xPosition, yPosition, zPosition);
 
-        if (validTiles.Count == 0)
-        {
-            int i = 0;
-        }
+        //Vector3Int checkPosition = position;
+        //checkPosition[0] += 1;
+        //if (gridDimensions[0] > checkPosition[0])
+        //{
+        //    if (tileGrid[checkPosition.x][checkPosition.y][checkPosition.z] != null)
+        //    {
+        //        // Remove all tiles that does not match up with the above socket
+        //        validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileData.TileSocketData, SocketData.Sides.Below));
+        //    }
+        //}
+
+        //// Check the above sockets
+        //if (gridDimensions.y > yPosition + 1)
+        //{
+        //    if (tileGrid[xPosition][yPosition + 1][zPosition] != null)
+        //    {
+        //        // Remove all tiles that does not match up with the above socket
+        //        validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition + 1][zPosition].TileData.TileSocketData, SocketData.Sides.Below));
+        //    }
+        //}
+        //else
+        //{
+        //    validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.AboveNeighbours.Contains(-1));
+        //}
+        //// Check below sockets
+        //if (yPosition > 0)
+        //{
+        //    if (tileGrid[xPosition][yPosition - 1][zPosition] != null)
+        //    {
+        //        // Remove all tiles that does match up with the below socket
+        //        validTiles.RemoveAll(tile => !tile.TileSocketData.CheckValidSocketConnection(tileGrid[xPosition][yPosition - 1][zPosition].TileData.TileSocketData, SocketData.Sides.Above));
+        //    }
+        //}
+        //else
+        //{
+        //    validTiles.RemoveAll(tile => !tile.TileSocketData.validNeighbours.BelowNeighbours.Contains(-1));
+        //}
+
+        //if (validTiles.Count == 0)
+        //{
+        //    int i = 0;
+        //}
+
+        Vector3Int gridPosition = new Vector3Int(xPosition, yPosition, zPosition);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.up,       1, SocketData.Sides.Above);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.down,     1, SocketData.Sides.Below);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.forward,  2, SocketData.Sides.Front);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.right,    0, SocketData.Sides.Right);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.back,     2, SocketData.Sides.Back);
+        validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.left,     0, SocketData.Sides.Left);
 
         return validTiles;
     }
 
-    private TileData GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
+    private TileComponent GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
     {
         // Add together the weightings
         float maxWeighting = 0.0f;
         for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight;
+            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight;
         }
         // Roll a random number between 0 and the max value
         float randomNumber = Random.Range(0.0f, maxWeighting);
@@ -261,11 +281,11 @@ public class TileGrid : MonoBehaviour
         float currentWeight = 0.0f;
         for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight)
+            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight)
             {
                 return proabailitySpace[xPosition][yPosition][zPosition][i];
             }
-            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].BaseTileWeight;
+            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight;
         }
         Debug.LogError("No tile able to be selected in probability space");
         return null;
@@ -282,8 +302,8 @@ public class TileGrid : MonoBehaviour
                 {
                     if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
                     {
-                        List<TileData> currentPossiblitySpace = proabailitySpace[xPosition][yPosition][zPosition];
-                        List<TileData> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
+                        List<TileComponent> currentPossiblitySpace = proabailitySpace[xPosition][yPosition][zPosition];
+                        List<TileComponent> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
                         currentPossiblitySpace.Sort(new TileComparer());
                         newProabilitySpace.Sort(new TileComparer());
                         if (newProabilitySpace.Count != currentPossiblitySpace.Count)
@@ -295,7 +315,7 @@ public class TileGrid : MonoBehaviour
                         for (int i = 0; i < currentPossiblitySpace.Count; ++i)
                         {
                             // if the space has changed, propagate over these new tiles
-                            if (currentPossiblitySpace[i].ID != newProabilitySpace[i].ID)
+                            if (currentPossiblitySpace[i].TileData.ID != newProabilitySpace[i].TileData.ID)
                             {
 
                                 proabailitySpace[x][y][z] = newProabilitySpace;
@@ -386,8 +406,10 @@ public class TileGrid : MonoBehaviour
             //// Pick a random tile with the lowest entropy
             //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
-            TileData newTileData = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
-            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = GameObject.Instantiate(tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z], new Vector3(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform);
+            TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = 
+                GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x, 
+                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform).GetComponent<TileComponent>();
 
 
             // Propagate across to the grid
@@ -397,5 +419,27 @@ public class TileGrid : MonoBehaviour
         }
     }
 
+
+    private List<TileComponent> RemoveInvalidPossibleTilesBasedOnSocket(List<TileComponent> currentTileList, Vector3Int gridPosition, Vector3Int tileCheckOffset, int offSetIndexChecked, SocketData.Sides sideChecked)
+    {
+        List<TileComponent> returnedTiles = currentTileList;
+        Vector3Int offestGridPosition = gridPosition + tileCheckOffset;
+        // Check the above sockets
+        // If the offset grid position is within the bounds of the grid
+        if (tileCheckOffset[offSetIndexChecked] > 0 ? gridDimensions[offSetIndexChecked] > offestGridPosition[offSetIndexChecked] : offestGridPosition[offSetIndexChecked] > -1)
+        {
+            if (tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z] != null)
+            {
+                // Remove all tiles that does not match up with the above socket
+                returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.CheckValidSocketConnection(tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)));
+            }
+        }
+        else
+        {
+            returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.validNeighbours.GetValidNeighbourListForSide(sideChecked).Contains(-1));
+        }
+
+        return returnedTiles;
+    }
 }
 

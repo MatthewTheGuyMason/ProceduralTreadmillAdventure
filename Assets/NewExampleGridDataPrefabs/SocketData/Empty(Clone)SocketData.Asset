@@ -13,3 +13,10 @@ MonoBehaviour:
   m_Name: Empty(Clone)SocketData
   m_EditorClassIdentifier: 
   sideSocketIds: 000000000000000000000000000000000000000000000000
+  validNeighbours:
+    aboveNeighbours: 00000000ffffffff
+    belowNeighbours: 010000000000000002000000
+    frontNeighbours: 0000000007000000ffffffff
+    rightNeighbours: 060000000700000000000000ffffffff
+    backNeighbours: ffffffff000000000700000006000000
+    leftNeighbours: ffffffff0700000000000000

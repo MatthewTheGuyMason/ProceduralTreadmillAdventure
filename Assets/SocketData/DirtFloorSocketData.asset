@@ -12,16 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
   m_Name: DirtFloorSocketData
   m_EditorClassIdentifier: 
-  aboveSocket: 1
-  belowSocket: -1
-  frontSocket: 0
-  rightSocket: 0
-  backSocket: 0
-  leftSocket: 0
+  sideSocketIds: 01000000ffffffff01000000010000000100000001000000
   validNeighbours:
-    aboveNeighbours: 000000000400000005000000
-    belowNeighbours: ffffffff
+    aboveNeighbours: 
+    belowNeighbours: 
     frontNeighbours: 
     rightNeighbours: 
     backNeighbours: 
-    lefteNeighbours: 
+    leftNeighbours: 

@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
-  m_Name: EmptySockets
+  m_Name: PlantSocketData
   m_EditorClassIdentifier: 
-  sideSocketIds: 000000000000000000000000000000000000000000000000
+  sideSocketIds: 030000000500000007000000070000000700000007000000
   validNeighbours:
-    aboveNeighbours: 
-    belowNeighbours: 
-    frontNeighbours: 
-    rightNeighbours: 
-    backNeighbours: 
-    leftNeighbours: 
+    aboveNeighbours: 05000000ffffffff
+    belowNeighbours: 0100000003000000
+    frontNeighbours: ffffffff00000000ffffffff
+    rightNeighbours: 0000000006000000ffffffff
+    backNeighbours: 0000000006000000ffffffff
+    leftNeighbours: ffffffff00000000
