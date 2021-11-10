@@ -112,4 +112,20 @@ public class TileData
         return baseTileWeight;
     }
     #endregion
+
+    #region Public Methods
+    public TileData()
+    {
+    }
+
+    public TileData(TileData tileData)
+    {
+        id = tileData.id;
+        baseTileWeight = tileData.baseTileWeight;
+        tileSocketData = tileData.tileSocketData;
+        tileType = tileData.tileType;
+        GridCoordinates = tileData.GridCoordinates;
+
+    }
+    #endregion
 }

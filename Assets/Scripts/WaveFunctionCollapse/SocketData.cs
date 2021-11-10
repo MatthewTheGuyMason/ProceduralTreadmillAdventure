@@ -135,6 +135,32 @@ public class SocketData : ScriptableObject
         {
             return allNeighbours[(int)side];
         }
+
+        public void RotateAroundY(int numberOf90DegreeClockwiseTurns)
+        {
+            int[][] allOldNeighbours = new int[4][];
+            for (int i = 0; i < allOldNeighbours.Length; ++i)
+            {
+                allOldNeighbours[i] = new int[allNeighbours[i + (int)Sides.Front].Count];
+                for (int j = 0; j < allOldNeighbours[i].Length; ++j)
+                {
+                    allOldNeighbours[i][j] = allNeighbours[i + (int)Sides.Front][j];
+                }
+            }
+
+            for (int i = 0; i < 4; ++i)
+            {
+                int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns + (int)Sides.Front;
+                int range = (int)Sides.Left - (int)Sides.Front;
+                while (rotatedFaceIndex > range + (int)Sides.Front)
+                {
+                    rotatedFaceIndex -= range;
+                }
+
+                allNeighbours[i + (int)Sides.Front].Clear();
+                allNeighbours[i + (int)Sides.Front].AddRange(allOldNeighbours[rotatedFaceIndex]);
+            }
+        }
     }
 
     /// <summary>
@@ -233,6 +259,8 @@ public class SocketData : ScriptableObject
 
     public Neighbours validNeighbours;
 
+    public Neighbours[] prototypeNeightbours;
+
     public int GetIdOfSide(Sides side)
     {
         return sideSocketIds[(int)side];
@@ -283,6 +311,28 @@ public class SocketData : ScriptableObject
                 return Vector3Int.left;
         }
         return Vector3Int.zero;
+    }
+
+    public void RotateAroundY(int numberOf90DegreeClockwiseTurns)
+    {
+        int[] allOldSideID = new int[4];
+        for (int i = 0; i < allOldSideID.Length; ++i)
+        {
+            allOldSideID[i] = sideSocketIds[i + (int)Sides.Front];
+        }
+
+        for (int i = 0; i < 4; ++i)
+        {
+            int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns + (int)Sides.Front;
+            int range = (int)Sides.Left - (int)Sides.Front;
+            while (rotatedFaceIndex > range + (int)Sides.Front)
+            {
+                rotatedFaceIndex -= range;
+            }
+
+            allOldSideID[i + (int)Sides.Front] = sideSocketIds[rotatedFaceIndex];
+        }
+        validNeighbours.RotateAroundY(numberOf90DegreeClockwiseTurns);
     }
 
     private void OnValidate()

@@ -407,14 +407,23 @@ public class TileGrid : MonoBehaviour
             //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
             TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
-            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = 
-                GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x, 
+            if (newTileComponent != null)
+            {
+                tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
+                GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
                 lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform).GetComponent<TileComponent>();
 
+
+            }
+            else
+            {
+                ResetGenAttempt();
+            }
 
             // Propagate across to the grid
             UpdateEntireProbalitySpace();
             //PropergateChangeAcrossTileGrid(randomTileCoords.x, randomTileCoords.y, randomTileCoords.z);
+
             yield return new WaitForSeconds(0.0f);
         }
     }
@@ -440,6 +449,61 @@ public class TileGrid : MonoBehaviour
         }
 
         return returnedTiles;
+    }
+
+    private void ResetGenAttempt()
+    {
+        for (int i = 0; i < tileGrid.Length; ++i)
+        {
+            for (int j = 0; j < tileGrid[i].Length; ++j)
+            {
+                for (int k = 0; k < tileGrid[i][j].Length; ++k)
+                {
+                    if (tileGrid[i][j][k] != null)
+                    {
+                        Destroy(tileGrid[i][j][k].gameObject);
+                    }
+                }
+            }
+        }
+
+        tileGrid = new TileComponent[gridDimensions.x][][];
+        for (int i = 0; i < tileGrid.Length; ++i)
+        {
+            tileGrid[i] = new TileComponent[gridDimensions.y][];
+            for (int k = 0; k < tileGrid[i].Length; ++k)
+            {
+
+                tileGrid[i][k] = new TileComponent[gridDimensions.z];
+            }
+        }
+
+        proabailitySpace = new List<TileComponent>[gridDimensions.x][][];
+        for (int i = 0; i < proabailitySpace.Length; ++i)
+        {
+            proabailitySpace[i] = new List<TileComponent>[gridDimensions.y][];
+            for (int j = 0; j < proabailitySpace[i].Length; ++j)
+            {
+                proabailitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
+                //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
+                //{
+                //    proabailitySpace[i][j][k] = new List<Tile>();
+                //}
+            }
+        }
+    }
+
+    private void BuildTileSetProtoTypes()
+    {
+        List<TileComponent> newTileSet = new List<TileComponent>(tileSet.Length * 4);
+        for (int i = 0; i < tileSet.Length; ++i)
+        {
+            for (int j = 0; j < 4; ++i)
+            {
+                // TODO: figure out the best way to set up the prototypes 
+                //newTileSet.Add()
+            }
+        }
     }
 }
 

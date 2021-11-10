@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
-  m_Name: EmptySockets
+  m_Name: MountineSocketDataBasis
   m_EditorClassIdentifier: 
-  sideSocketIds: 000000000000000000000000000000000000000000000000
+  sideSocketIds: 020000000400000006000000060000000600000006000000
   validNeighbours:
-    aboveNeighbours: 
-    belowNeighbours: 
+    aboveNeighbours: 000000000400000005000000
+    belowNeighbours: 0100000002000000
     frontNeighbours: 
     rightNeighbours: 
     backNeighbours: 

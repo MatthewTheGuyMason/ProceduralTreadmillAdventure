@@ -62,23 +62,33 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         }
         if (GUILayout.Button("Generate Build Data"))
         {
-            List<TileComponent> tileComponents = BuildExampleGridData();
-
-            // Create Folder To Store Prefabs
-            AssetDatabase.CreateFolder("Assets", "NewExampleGridDataPrefabs");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.CreateFolder("Assets/NewExampleGridDataPrefabs", "SocketData");
-            AssetDatabase.SaveAssets();
-            List<GameObject> newPrefabs = new List<GameObject>(tileComponents.Count);
-            for (int i = 0; i < tileComponents.Count; ++i)
+            if (BuildExampleGridData(out List<GameObject> prefabBasis, out List<TileData> tileDatas))
             {
-                AssetDatabase.CreateAsset(tileComponents[i].TileData.TileSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + tileComponents[i].gameObject.name + "SocketData.Asset");
-                newPrefabs.Add(PrefabUtility.SaveAsPrefabAsset(tileComponents[i].gameObject, "Assets/NewExampleGridDataPrefabs/" + tileComponents[i].gameObject.name + ".prefab"));
-            }
+                // Create Folder To Store Prefabs
+                AssetDatabase.CreateFolder("Assets", "NewExampleGridDataPrefabs");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.CreateFolder("Assets/NewExampleGridDataPrefabs", "SocketData");
+                AssetDatabase.SaveAssets();
+                List<GameObject> newPrefabs = new List<GameObject>(tileDatas.Count);
+                for (int i = 0; i < tileDatas.Count; ++i)
+                {
+                    AssetDatabase.CreateAsset(tileDatas[i].TileSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + prefabBasis[i].name + "SocketData.Asset");
+                    newPrefabs.Add(PrefabUtility.SaveAsPrefabAsset(prefabBasis[i], "Assets/NewExampleGridDataPrefabs/" + prefabBasis[i].name + ".prefab"));
+                    if (newPrefabs[newPrefabs.Count - 1].TryGetComponent<TileComponent>(out TileComponent newTileComponent))
+                    {
+                        newTileComponent.TileData = tileDatas[i];
+                        PrefabUtility.SavePrefabAsset(newPrefabs[i]);
+                    }
+                }
 
-            ExampleGridData exampleGridData = ExampleGridData.CreateInstance<ExampleGridData>();
-            exampleGridData.tilePrefabs = newPrefabs;
-            AssetDatabase.CreateAsset(exampleGridData, "Assets/NewExampleGridData.asset");
+                ExampleGridData exampleGridData = ExampleGridData.CreateInstance<ExampleGridData>();
+                exampleGridData.tilePrefabs = newPrefabs;
+                AssetDatabase.CreateAsset(exampleGridData, "Assets/NewExampleGridData.asset");
+            }
+            else
+            {
+                Debug.LogError("Generate Example Build Data Failed");
+            }
         }
     }
 
@@ -108,9 +118,10 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         }
     }
 
-    private List<TileComponent> BuildExampleGridData()
+    private bool BuildExampleGridData(out List<GameObject> prefabBasisObjects, out List<TileData> tileDatas)
     {
-        List<TileComponent> currentTileTypes = new List<TileComponent>();
+        tileDatas = new List<TileData>();
+        prefabBasisObjects = new List<GameObject>();
         List<int> currentTileFequency = new List<int>();
 
         int tileCount = gridDimensions.x * gridDimensions.y * gridDimensions.z;
@@ -143,7 +154,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         else
         {
             Debug.LogError("Grid Parent did not contain enough children for the number of tiles");
-            return null;
+            return false;
         }
 
         // Iterate over all the tiles
@@ -156,19 +167,20 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                     if (gridParent != null)
                     {
                         TileComponent currentTile = tileGrid[x][y][z];
-                        if (TryGetTileWithMatchingID(currentTileTypes, currentTile.TileData.ID, out int index))
+                        if (TryGetTileWithMatchingID(tileDatas, currentTile.TileData.ID, out int index))
                         {
                             ++currentTileFequency[index];
-                            AddAllNeighbouringSocketsToSocketData(currentTileTypes[index].TileData.TileSocketData, new Vector3Int(x, y, z));
+                            AddAllNeighbouringSocketsToSocketData(tileDatas[index].TileSocketData, new Vector3Int(x, y, z));
                         }
                         else
                         {
-                            currentTileTypes.Add(currentTile);
+                            tileDatas.Add(new TileData(currentTile.TileData));
+                            prefabBasisObjects.Add(currentTile.gameObject);
                             currentTileFequency.Add(1);
                             SocketData newSocketData = SocketData.CreateInstance<SocketData>();
                             newSocketData.CopySocketIDs(currentTile.TileData.TileSocketData);
-                            currentTile.TileData.TileSocketData = newSocketData;
-                            AddAllNeighbouringSocketsToSocketData(currentTile.TileData.TileSocketData, new Vector3Int(x, y, z));
+                            tileDatas[tileDatas.Count - 1].TileSocketData = newSocketData;
+                            AddAllNeighbouringSocketsToSocketData(tileDatas[tileDatas.Count - 1].TileSocketData, new Vector3Int(x, y, z));
                         }
                         // Add all the nearby sockets to its lists
 
@@ -181,20 +193,20 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
         float weightPerFequency = 1.0f / tileCount;
 
-        for (int i = 0; i < currentTileTypes.Count; ++i)
+        for (int i = 0; i < tileDatas.Count; ++i)
         {
-            currentTileTypes[i].TileData.BaseTileWeight = weightPerFequency * currentTileFequency[i];
+            tileDatas[i].BaseTileWeight = weightPerFequency * currentTileFequency[i];
         }
 
-        return currentTileTypes;
+        return true;
     }
 
-    private bool TryGetTileWithMatchingID(List<TileComponent> listToCheck, int IDtoCheckFor, out int index)
+    private bool TryGetTileWithMatchingID(List<TileData> listToCheck, int IDtoCheckFor, out int index)
     {
         index = -1;
         for (int i = 0; i < listToCheck.Count; ++i)
         {
-            if (listToCheck[i].TileData.ID == IDtoCheckFor)
+            if (listToCheck[i].ID == IDtoCheckFor)
             {
                 index = i;
                 return true;

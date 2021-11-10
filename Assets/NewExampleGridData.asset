@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: NewExampleGridData
   m_EditorClassIdentifier: 
   tilePrefabs:
-  - {fileID: 4506584579955042520, guid: 14036910dd9be8445b3dfddf21f68589, type: 3}
-  - {fileID: 4351054648692197716, guid: dc750ca115fe7b849ba41b4fe7ca69b5, type: 3}
-  - {fileID: 6107279344881893362, guid: fed75eae26108ac448b47fa0563bc2b2, type: 3}
-  - {fileID: 1848808738362847659, guid: 3b1f7d7129789fe4ab32ea04d166058c, type: 3}
+  - {fileID: 209584415784045963, guid: d61f1134316cf0a40b9246394de88d0f, type: 3}
+  - {fileID: 510110084, guid: 5080cbb2bba461f469c489b74d2e6f07, type: 3}
+  - {fileID: 7539983530969039554, guid: b7cae624720c2e448a452c159ba4ba2f, type: 3}
+  - {fileID: 8275372905403399783, guid: e4b7e2b105c5d504db7c9d1535a666d8, type: 3}
+  - {fileID: 2723064682828964311, guid: 00c294606b19dd946859b196ced65212, type: 3}
+  - {fileID: 4143531443700341426, guid: d51fdee83210c1042bab4147b3a609a8, type: 3}

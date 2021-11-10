@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
-  m_Name: PlantSocketData
+  m_Name: CactusFlowerTileSocketData
   m_EditorClassIdentifier: 
-  sideSocketIds: 030000000500000007000000070000000700000007000000
+  sideSocketIds: 000000000800000000000000000000000000000000000000
   validNeighbours:
-    aboveNeighbours: 05000000ffffffff08000000
-    belowNeighbours: 0100000003000000
-    frontNeighbours: ffffffff00000000
+    aboveNeighbours: ffffffff00000000
+    belowNeighbours: 03000000
+    frontNeighbours: 00000000
     rightNeighbours: 00000000ffffffff
     backNeighbours: 00000000ffffffff
-    leftNeighbours: ffffffff00000000
+    leftNeighbours: 00000000
   prototypeNeightbours: []
