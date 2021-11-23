@@ -4,5 +4,5 @@ using UnityEngine;
 
 public class ExampleGridData : ScriptableObject
 {
-    public List<GameObject> tilePrefabs; 
+    public List<TileComponent> tilePrefabs;
 }

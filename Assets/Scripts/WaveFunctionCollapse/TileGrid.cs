@@ -23,8 +23,16 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private Vector3Int gridDimensions;
 
+    //[SerializeField]
+    //private TileComponent[] tileSet;
+
     [SerializeField]
-    private TileComponent[] tileSet;
+    private int timeBetweenPlacements;
+
+    [SerializeField]
+    private ExampleGridData exampleGridData;
+
+
 
 #if UNITY_EDITOR
     [SerializeField]
@@ -86,8 +94,8 @@ public class TileGrid : MonoBehaviour
         float weightTimesLogWeight = 0.0f;
         for (int i = 0; i < possibilitySpace.Count; ++i)
         {
-            weightSum += possibilitySpace[i].TileData.BaseTileWeight;
-            weightTimesLogWeight += possibilitySpace[i].TileData.BaseTileWeight * Mathf.Log(possibilitySpace[0].TileData.BaseTileWeight);
+            weightSum += possibilitySpace[i].TileData.Weight;
+            weightTimesLogWeight += possibilitySpace[i].TileData.Weight * Mathf.Log(possibilitySpace[i].TileData.Weight);
         }
 
         return Mathf.Log(weightSum) - weightTimesLogWeight / weightSum;
@@ -176,7 +184,7 @@ public class TileGrid : MonoBehaviour
 
     private List<TileComponent> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
     {
-        List<TileComponent> validTiles = new List<TileComponent>(tileSet);
+        List<TileComponent> validTiles = new List<TileComponent>(exampleGridData.tilePrefabs);
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
         if (yPosition > 0)
@@ -272,7 +280,7 @@ public class TileGrid : MonoBehaviour
         float maxWeighting = 0.0f;
         for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight;
+            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
         }
         // Roll a random number between 0 and the max value
         float randomNumber = Random.Range(0.0f, maxWeighting);
@@ -281,11 +289,11 @@ public class TileGrid : MonoBehaviour
         float currentWeight = 0.0f;
         for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight)
+            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight)
             {
                 return proabailitySpace[xPosition][yPosition][zPosition][i];
             }
-            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.BaseTileWeight;
+            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
         }
         Debug.LogError("No tile able to be selected in probability space");
         return null;
@@ -367,11 +375,12 @@ public class TileGrid : MonoBehaviour
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-                        if (proabailitySpace[x][y][z].Count < lowestEntropyValue)
+                        float entropy = GetShannonEntropy(proabailitySpace[x][y][z]);
+                        if (entropy < lowestEntropyValue)
                         {
                             if (tileGrid[x][y][z] == null)
                             {
-                                lowestEntropyValue = GetShannonEntropy(proabailitySpace[x][y][z]);
+                                lowestEntropyValue = entropy;
                                 lowestEntropyTilesCoords = new Vector3Int(x, y, z);
                             }
                         }
@@ -411,7 +420,7 @@ public class TileGrid : MonoBehaviour
             {
                 tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
                 GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
-                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), transform.rotation, transform).GetComponent<TileComponent>();
+                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
 
 
             }
@@ -424,7 +433,7 @@ public class TileGrid : MonoBehaviour
             UpdateEntireProbalitySpace();
             //PropergateChangeAcrossTileGrid(randomTileCoords.x, randomTileCoords.y, randomTileCoords.z);
 
-            yield return new WaitForSeconds(0.0f);
+            yield return new WaitForSeconds(timeBetweenPlacements);
         }
     }
 
@@ -439,6 +448,8 @@ public class TileGrid : MonoBehaviour
         {
             if (tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z] != null)
             {
+                // TODO: Make this go through and check if there is a valid connection in any of the possibility space
+
                 // Remove all tiles that does not match up with the above socket
                 returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.CheckValidSocketConnection(tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)));
             }
@@ -493,17 +504,17 @@ public class TileGrid : MonoBehaviour
         }
     }
 
-    private void BuildTileSetProtoTypes()
-    {
-        List<TileComponent> newTileSet = new List<TileComponent>(tileSet.Length * 4);
-        for (int i = 0; i < tileSet.Length; ++i)
-        {
-            for (int j = 0; j < 4; ++i)
-            {
-                // TODO: figure out the best way to set up the prototypes 
-                //newTileSet.Add()
-            }
-        }
-    }
+    //private void BuildTileSetProtoTypes()
+    //{
+    //    List<TileComponent> newTileSet = new List<TileComponent>(tileSet.Length * 4);
+    //    for (int i = 0; i < tileSet.Length; ++i)
+    //    {
+    //        for (int j = 0; j < 4; ++i)
+    //        {
+    //            // TODO: figure out the best way to set up the prototypes 
+    //            //newTileSet.Add()
+    //        }
+    //    }
+    //}
 }
 

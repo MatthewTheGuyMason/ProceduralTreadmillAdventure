@@ -9,7 +9,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
     private Vector3Int gridDimensions;
 
-    private GameObject gridParent;
+    private ExampleGridController gridController;
 
     private GameObject defaultTilePrefab;
 
@@ -21,6 +21,12 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     private SerializedProperty tilePrefabsInUseProperty;
 
     private bool showPrefabsInUseArray;
+
+    private Vector3Int brushBottomLeft;
+
+    private Vector3Int brushTopRight;
+
+    private TileComponent brushTile;
 
     // Add menu named "My Window" to the Window menu
     [MenuItem("Window/Wave Collapse Example Editor Window")]
@@ -34,7 +40,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     private void OnGUI()
     {
         gridDimensions = EditorGUILayout.Vector3IntField("Grid Dimensions", gridDimensions);
-        gridParent = (GameObject)EditorGUILayout.ObjectField("Grid Parent GameObject", gridParent, typeof(GameObject), true);
+        gridController = (ExampleGridController)EditorGUILayout.ObjectField("Grid Parent ExampleGridController", gridController, typeof(ExampleGridController), true);
         defaultTilePrefab = (GameObject)EditorGUILayout.ObjectField("Default Tile Prefab", defaultTilePrefab, typeof(GameObject), false);
 
         int tilePrefabsInUseArraySize = EditorGUILayout.IntField("Tile Prefabs In Use Size", tilePrefabsInUse.Length);
@@ -53,12 +59,10 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             }
         }
 
-        if (gridParent != null)
+        if (GUILayout.Button("Build Grid Template"))
         {
-            if (GUILayout.Button("Build Grid Template"))
-            {
-                BuildGridObjectParents();
-            }
+            BuildGridObjectParents();
+            AssetDatabase.SaveAssets();
         }
         if (GUILayout.Button("Generate Build Data"))
         {
@@ -69,7 +73,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                 AssetDatabase.SaveAssets();
                 AssetDatabase.CreateFolder("Assets/NewExampleGridDataPrefabs", "SocketData");
                 AssetDatabase.SaveAssets();
-                List<GameObject> newPrefabs = new List<GameObject>(tileDatas.Count);
+                List<GameObject> newPrefabs = new List<GameObject>(tileDatas.Count * 4);
                 for (int i = 0; i < tileDatas.Count; ++i)
                 {
                     AssetDatabase.CreateAsset(tileDatas[i].TileSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + prefabBasis[i].name + "SocketData.Asset");
@@ -78,17 +82,46 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                     {
                         newTileComponent.TileData = tileDatas[i];
                         PrefabUtility.SavePrefabAsset(newPrefabs[i]);
+                        // Create 3 additional prototypes
+                        TileComponent[] newPrefabComponents = CreatePrototypes(newTileComponent);
+                        for (int j = 0; j < newPrefabComponents.Length; ++j)
+                        {
+                            newPrefabs.Add(newPrefabComponents[j].gameObject);
+                        }
                     }
                 }
 
                 ExampleGridData exampleGridData = ExampleGridData.CreateInstance<ExampleGridData>();
-                exampleGridData.tilePrefabs = newPrefabs;
+                exampleGridData.tilePrefabs = new List<TileComponent>();
+                for (int i = 0; i < newPrefabs.Count; ++i)
+                {
+                    exampleGridData.tilePrefabs.Add(newPrefabs[i].GetComponent<TileComponent>());
+                }
                 AssetDatabase.CreateAsset(exampleGridData, "Assets/NewExampleGridData.asset");
             }
             else
             {
                 Debug.LogError("Generate Example Build Data Failed");
             }
+        }
+
+        if (GUILayout.Button("Adjust Grid Dimensions"))
+        {
+            if (gridController != null)
+            {
+                gridController.AdjustGridDimensions(gridDimensions, defaultTilePrefab);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        brushBottomLeft = EditorGUILayout.Vector3IntField("Brush Bottom Left", brushBottomLeft);
+        brushTopRight = EditorGUILayout.Vector3IntField("Brush Top Right", brushTopRight);
+        brushTile = (TileComponent)EditorGUILayout.ObjectField("Brush Tile", brushTile, typeof(TileComponent), false);
+
+        if (GUILayout.Button("Fill Area"))
+        {
+            gridController.FillInAreaWithTile(brushBottomLeft, brushTopRight, brushTile.gameObject);
+            AssetDatabase.SaveAssets();
         }
     }
 
@@ -100,23 +133,11 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
     private void BuildGridObjectParents()
     {
-        for (int x = 0; x < gridDimensions.x; ++x)
-        {
-            for (int y = 0; y < gridDimensions.y; ++y)
-            {
-                for (int z = 0; z < gridDimensions.x; ++z)
-                {
-                    GameObject newEmpty = new GameObject(x.ToString() + ", " + y.ToString() + ", " + z.ToString());
-                    newEmpty.transform.SetParent(gridParent.transform);
-                    newEmpty.transform.localPosition = new Vector3(x, y, z);
-                    if (defaultTilePrefab != null)
-                    {
-                        GameObject.Instantiate(defaultTilePrefab, newEmpty.transform.position, newEmpty.transform.rotation, newEmpty.transform);
-                    }
-                }
-            }
-        }
+        gridController = new GameObject("ExampleGrid").AddComponent<ExampleGridController>();
+        gridController.BuildGridObjectParents(gridDimensions, defaultTilePrefab);
     }
+
+    // TODO: Add some code to detectRotation of a tile and account for it when building the data set
 
     private bool BuildExampleGridData(out List<GameObject> prefabBasisObjects, out List<TileData> tileDatas)
     {
@@ -137,7 +158,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             }
         }
         int childIndex = 0;
-        if (gridParent.transform.childCount == tileCount)
+        if (gridController.transform.childCount == tileCount)
         {
             for (int x = 0; x < gridDimensions.x; ++x)
             {
@@ -145,7 +166,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-                        tileGrid[x][y][z] = gridParent.transform.GetChild(childIndex).GetComponentInChildren<TileComponent>();
+                        tileGrid[x][y][z] = gridController.transform.GetChild(childIndex).GetComponentInChildren<TileComponent>();
                         ++childIndex;
                     }
                 }
@@ -164,7 +185,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             {
                 for (int z = 0; z < gridDimensions.z; ++z)
                 {
-                    if (gridParent != null)
+                    if (gridController != null)
                     {
                         TileComponent currentTile = tileGrid[x][y][z];
                         if (TryGetTileWithMatchingID(tileDatas, currentTile.TileData.ID, out int index))
@@ -195,7 +216,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
         for (int i = 0; i < tileDatas.Count; ++i)
         {
-            tileDatas[i].BaseTileWeight = weightPerFequency * currentTileFequency[i];
+            tileDatas[i].Weight = weightPerFequency * currentTileFequency[i];
         }
 
         return true;
@@ -315,5 +336,54 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         return false;
     }
 
-    // TODO: Make sure the window is copying prefab reference rather than scene object reference when creating the editor example data
+    private TileComponent[] CreatePrototypes(TileComponent tileComponent)
+    {
+        TileComponent[] newTileComponents = new TileComponent[3];
+        for (int i = 1; i < 4; ++i)
+        {
+            string prototypeName = "";
+            switch (i)
+            {
+                case 1:
+                    prototypeName = "PrototypeRight";
+                    break;
+                case 2:
+                    prototypeName = "PrototypeBackwards";
+                    break;
+                case 3:
+                    prototypeName = "PrototypeLeft";
+                    break;
+            }
+
+            // Create a game object prefab copy
+            GameObject newPrototypeInstance = GameObject.Instantiate(tileComponent.gameObject);
+            GameObject newPrototype = PrefabUtility.SaveAsPrefabAsset(newPrototypeInstance, "Assets/NewExampleGridDataPrefabs/" + tileComponent.gameObject.name + prototypeName + ".prefab");
+            DestroyImmediate(newPrototypeInstance);
+            newPrototype.transform.Rotate(Vector3.up, -i * 90);
+
+            newTileComponents[i - 1] = newPrototype.GetComponent<TileComponent>();
+
+            // Create a new scriptable object for the sockets
+            SocketData newSocketData = ScriptableObject.CreateInstance<SocketData>();
+            newSocketData.CopyData(tileComponent.TileData.TileSocketData);
+            newSocketData.RotateAroundY(i);
+            AssetDatabase.CreateAsset(newSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + tileComponent.gameObject.name + prototypeName + "SocketData.Asset");
+
+            newTileComponents[i - 1].TileData.TileSocketData = newSocketData;
+
+            PrefabUtility.SavePrefabAsset(newPrototype);
+        }
+
+        return newTileComponents;
+    }
+
+    //private void FillInAreaWithTile(Vector3Int bottemLeft, Vector3Int topRight, TileComponent tileToPlace)
+    //{
+    //    int 
+    //}
+
+    //private int ConvertGridCordinateToIndex(Vector3Int GridIndex)
+    //{
+    //    int xMultiplier = gridDimensions.
+    //}
 }

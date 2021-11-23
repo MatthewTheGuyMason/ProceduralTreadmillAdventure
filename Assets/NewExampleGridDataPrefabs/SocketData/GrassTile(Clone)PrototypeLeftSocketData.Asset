@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
+  m_Name: GrassTile(Clone)PrototypeLeftSocketData
+  m_EditorClassIdentifier: 
+  sideSocketIds: 01000000ffffffff01000000010000000100000001000000
+  validNeighbours:
+    aboveNeighbours: 00000000
+    belowNeighbours: ffffffff
+    frontNeighbours: 01000000
+    rightNeighbours: 01000000ffffffff
+    backNeighbours: 01000000ffffffff
+    leftNeighbours: ffffffff01000000

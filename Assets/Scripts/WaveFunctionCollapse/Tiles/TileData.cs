@@ -60,7 +60,7 @@ public class TileData
     /// <summary>
     /// The weighting for how likely this tile is to be picked
     /// </summary>
-    public float BaseTileWeight
+    public float Weight
     {
         get
         {

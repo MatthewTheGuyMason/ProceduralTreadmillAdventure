@@ -54,7 +54,8 @@ public class SocketData : ScriptableObject
             }
             set
             {
-                belowNeighbours = value;
+                aboveNeighbours = value;
+                allNeighbours[(int)Sides.Above] = aboveNeighbours;
             }
         }
         public List<int> BelowNeighbours
@@ -66,6 +67,7 @@ public class SocketData : ScriptableObject
             set
             {
                 belowNeighbours = value;
+                allNeighbours[(int)Sides.Below] = belowNeighbours;
             }
         }
         public List<int> FrontNeighbours
@@ -77,6 +79,7 @@ public class SocketData : ScriptableObject
             set
             {
                 frontNeighbours = value;
+                allNeighbours[(int)Sides.Front] = frontNeighbours;
             }
         }
         public List<int> RightNeighbours
@@ -88,6 +91,7 @@ public class SocketData : ScriptableObject
             set
             {
                 rightNeighbours = value;
+                allNeighbours[(int)Sides.Right] = rightNeighbours;
             }
         }
         public List<int> BackNeighbours
@@ -99,6 +103,7 @@ public class SocketData : ScriptableObject
             set
             {
                 backNeighbours = value;
+                allNeighbours[(int)Sides.Back] = backNeighbours;
             }
         }
         public List<int> LeftNeighbours
@@ -110,6 +115,7 @@ public class SocketData : ScriptableObject
             set
             {
                 leftNeighbours = value;
+                allNeighbours[(int)Sides.Left] = leftNeighbours;
             }
         }
 
@@ -150,11 +156,10 @@ public class SocketData : ScriptableObject
 
             for (int i = 0; i < 4; ++i)
             {
-                int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns + (int)Sides.Front;
-                int range = (int)Sides.Left - (int)Sides.Front;
-                while (rotatedFaceIndex > range + (int)Sides.Front)
+                int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns;
+                while (rotatedFaceIndex >= allOldNeighbours.Length)
                 {
-                    rotatedFaceIndex -= range;
+                    rotatedFaceIndex -= allOldNeighbours.Length;
                 }
 
                 allNeighbours[i + (int)Sides.Front].Clear();
@@ -259,8 +264,6 @@ public class SocketData : ScriptableObject
 
     public Neighbours validNeighbours;
 
-    public Neighbours[] prototypeNeightbours;
-
     public int GetIdOfSide(Sides side)
     {
         return sideSocketIds[(int)side];
@@ -315,7 +318,9 @@ public class SocketData : ScriptableObject
 
     public void RotateAroundY(int numberOf90DegreeClockwiseTurns)
     {
+
         int[] allOldSideID = new int[4];
+
         for (int i = 0; i < allOldSideID.Length; ++i)
         {
             allOldSideID[i] = sideSocketIds[i + (int)Sides.Front];
@@ -323,16 +328,18 @@ public class SocketData : ScriptableObject
 
         for (int i = 0; i < 4; ++i)
         {
-            int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns + (int)Sides.Front;
-            int range = (int)Sides.Left - (int)Sides.Front;
-            while (rotatedFaceIndex > range + (int)Sides.Front)
+            int rotatedFaceIndex = i + numberOf90DegreeClockwiseTurns;
+            while (rotatedFaceIndex >= allOldSideID.Length)
             {
-                rotatedFaceIndex -= range;
+                rotatedFaceIndex -= allOldSideID.Length;
             }
 
-            allOldSideID[i + (int)Sides.Front] = sideSocketIds[rotatedFaceIndex];
+            Debug.Log(((Sides)(i + (int)Sides.Front)).ToString() + " To " + ((Sides)(rotatedFaceIndex + 2)).ToString());
+
+            sideSocketIds[i + (int)Sides.Front] = allOldSideID[rotatedFaceIndex];
         }
         validNeighbours.RotateAroundY(numberOf90DegreeClockwiseTurns);
+
     }
 
     private void OnValidate()
@@ -346,4 +353,15 @@ public class SocketData : ScriptableObject
             sideSocketIds = new int[(int)Sides.Count];
         }
     }
+
+    //private bool RotationHasEffect()
+    //{
+    //    for (int i = (int)Sides.Front; i <= (int)Sides.Left; ++i)
+    //    {
+    //        if (sideSocketIds[i] != sideSocketIds[(int)Sides.Front])
+    //        {
+
+    //        }
+    //    }
+    //}
 }
