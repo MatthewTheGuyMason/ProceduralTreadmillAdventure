@@ -18,7 +18,7 @@ public class TileGrid : MonoBehaviour
     private TileComponent[][][] tileGrid;
 
     [SerializeField]
-    private List<TileComponent>[][][] proabailitySpace;
+    private List<TileComponent>[][][] possibilitySpace;
 
     [SerializeField]
     private Vector3Int gridDimensions;
@@ -52,13 +52,13 @@ public class TileGrid : MonoBehaviour
             }
         }
 
-        proabailitySpace = new List<TileComponent>[gridDimensions.x][][];
-        for (int i = 0; i < proabailitySpace.Length; ++i)
+        possibilitySpace = new List<TileComponent>[gridDimensions.x][][];
+        for (int i = 0; i < possibilitySpace.Length; ++i)
         {
-            proabailitySpace[i] = new List<TileComponent>[gridDimensions.y][];
-            for (int j = 0; j < proabailitySpace[i].Length; ++j)
+            possibilitySpace[i] = new List<TileComponent>[gridDimensions.y][];
+            for (int j = 0; j < possibilitySpace[i].Length; ++j)
             {
-                proabailitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
+                possibilitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
                 //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
                 //{
                 //    proabailitySpace[i][j][k] = new List<Tile>();
@@ -278,22 +278,22 @@ public class TileGrid : MonoBehaviour
     {
         // Add together the weightings
         float maxWeighting = 0.0f;
-        for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        for (int i = 0; i < possibilitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            maxWeighting += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
+            maxWeighting += possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
         }
         // Roll a random number between 0 and the max value
         float randomNumber = Random.Range(0.0f, maxWeighting);
 
         // Iterate over the possibility until there is a number between the current total weight and the current total weight
         float currentWeight = 0.0f;
-        for (int i = 0; i < proabailitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        for (int i = 0; i < possibilitySpace[xPosition][yPosition][zPosition].Count; ++i)
         {
-            if (randomNumber < currentWeight + proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight)
+            if (randomNumber < currentWeight + possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight)
             {
-                return proabailitySpace[xPosition][yPosition][zPosition][i];
+                return possibilitySpace[xPosition][yPosition][zPosition][i];
             }
-            currentWeight += proabailitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
+            currentWeight += possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
         }
         Debug.LogError("No tile able to be selected in probability space");
         return null;
@@ -310,13 +310,13 @@ public class TileGrid : MonoBehaviour
                 {
                     if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
                     {
-                        List<TileComponent> currentPossiblitySpace = proabailitySpace[xPosition][yPosition][zPosition];
+                        List<TileComponent> currentPossiblitySpace = possibilitySpace[xPosition][yPosition][zPosition];
                         List<TileComponent> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
                         currentPossiblitySpace.Sort(new TileComparer());
                         newProabilitySpace.Sort(new TileComparer());
                         if (newProabilitySpace.Count != currentPossiblitySpace.Count)
                         {
-                            proabailitySpace[x][y][z] = newProabilitySpace;
+                            possibilitySpace[x][y][z] = newProabilitySpace;
                             PropergateChangeAcrossTileGrid(x, y, z);
                             break;
                         }
@@ -326,7 +326,7 @@ public class TileGrid : MonoBehaviour
                             if (currentPossiblitySpace[i].TileData.ID != newProabilitySpace[i].TileData.ID)
                             {
 
-                                proabailitySpace[x][y][z] = newProabilitySpace;
+                                possibilitySpace[x][y][z] = newProabilitySpace;
                                 PropergateChangeAcrossTileGrid(x, y, z);
                             }
                         }
@@ -344,7 +344,7 @@ public class TileGrid : MonoBehaviour
             {
                 for (int z = 0; z < gridDimensions.z; ++z)
                 {
-                    proabailitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
+                    possibilitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
                 }
             }
         }
@@ -359,7 +359,7 @@ public class TileGrid : MonoBehaviour
             {
                 for (int z = 0; z < gridDimensions.z; ++z)
                 {
-                    proabailitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
+                    possibilitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
                 }
             }
         }
@@ -375,7 +375,7 @@ public class TileGrid : MonoBehaviour
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-                        float entropy = GetShannonEntropy(proabailitySpace[x][y][z]);
+                        float entropy = GetShannonEntropy(possibilitySpace[x][y][z]);
                         if (entropy < lowestEntropyValue)
                         {
                             if (tileGrid[x][y][z] == null)
@@ -453,6 +453,31 @@ public class TileGrid : MonoBehaviour
                 // Remove all tiles that does not match up with the above socket
                 returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.CheckValidSocketConnection(tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)));
             }
+            // Remove all tiles that don't match up with the sockets of the possibilities spaces
+            else
+            {
+                if (possibilitySpace[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z] != null)
+                {
+                    for (int i = 0; i < returnedTiles.Count; ++i)
+                    {
+                        // Check if the current return tile can match with any of the socket of given type in the possibility space
+                        bool canMatchWithAnyTile = false;
+                        for (int j = 0; j < possibilitySpace[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z].Count; ++j)
+                        {
+                            if (returnedTiles[i].TileData.TileSocketData.CheckValidSocketConnection(possibilitySpace[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z][j].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)))
+                            {
+                                canMatchWithAnyTile = true;
+                                break;
+                            }
+                        }
+                        if (!canMatchWithAnyTile)
+                        {
+                            returnedTiles.RemoveAt(i);
+                            --i;
+                        }
+                    }
+                }
+            }
         }
         else
         {
@@ -489,13 +514,13 @@ public class TileGrid : MonoBehaviour
             }
         }
 
-        proabailitySpace = new List<TileComponent>[gridDimensions.x][][];
-        for (int i = 0; i < proabailitySpace.Length; ++i)
+        possibilitySpace = new List<TileComponent>[gridDimensions.x][][];
+        for (int i = 0; i < possibilitySpace.Length; ++i)
         {
-            proabailitySpace[i] = new List<TileComponent>[gridDimensions.y][];
-            for (int j = 0; j < proabailitySpace[i].Length; ++j)
+            possibilitySpace[i] = new List<TileComponent>[gridDimensions.y][];
+            for (int j = 0; j < possibilitySpace[i].Length; ++j)
             {
-                proabailitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
+                possibilitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
                 //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
                 //{
                 //    proabailitySpace[i][j][k] = new List<Tile>();

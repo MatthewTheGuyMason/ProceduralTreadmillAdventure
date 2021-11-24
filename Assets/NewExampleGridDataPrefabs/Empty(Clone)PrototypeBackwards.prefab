@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7087295902650686823
+--- !u!1 &3317682597216351741
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3097576312588549605}
-  - component: {fileID: 1977590776063118905}
-  - component: {fileID: 724357092748166209}
+  - component: {fileID: 7006742671987903894}
+  - component: {fileID: 4912868174795745910}
+  - component: {fileID: 6135385949256083340}
   m_Layer: 0
   m_Name: Empty(Clone)PrototypeBackwards
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3097576312588549605
+--- !u!4 &7006742671987903894
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7087295902650686823}
+  m_GameObject: {fileID: 3317682597216351741}
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -32,26 +32,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1977590776063118905
+--- !u!65 &4912868174795745910
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7087295902650686823}
+  m_GameObject: {fileID: 3317682597216351741}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &724357092748166209
+--- !u!114 &6135385949256083340
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7087295902650686823}
+  m_GameObject: {fileID: 3317682597216351741}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -59,6 +59,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileData:
     id: 0
-    baseTileWeight: 0.79200006
+    baseTileWeight: 0.748
     tileSocketData: {fileID: 11400000, guid: 814f6288d9c8bcd41944ace16f3d3829, type: 2}
     tileType: 1

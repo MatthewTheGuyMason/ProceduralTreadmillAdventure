@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sideSocketIds: 12000000ffffffff0b0000000b0000001000000011000000
   validNeighbours:
-    aboveNeighbours: 00000000
+    aboveNeighbours: 0400000000000000
     belowNeighbours: ffffffff
     frontNeighbours: 0b000000
     rightNeighbours: 0b000000
-    backNeighbours: 0f000000
-    leftNeighbours: 0c000000
+    backNeighbours: 0f0000000d000000
+    leftNeighbours: 0c0000000e000000

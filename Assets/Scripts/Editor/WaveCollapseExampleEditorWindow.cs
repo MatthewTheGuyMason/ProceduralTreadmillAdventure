@@ -191,7 +191,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         if (TryGetTileWithMatchingID(tileDatas, currentTile.TileData.ID, out int index))
                         {
                             ++currentTileFequency[index];
-                            AddAllNeighbouringSocketsToSocketData(tileDatas[index].TileSocketData, new Vector3Int(x, y, z));
+                            AddAllNeighbouringSocketsToSocketData(tileDatas[index].TileSocketData, new Vector3Int(x, y, z), GetNumberOf90DegreeTurnsFromRotationAngle(currentTile.transform.rotation.eulerAngles.y));
                         }
                         else
                         {
@@ -201,7 +201,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                             SocketData newSocketData = SocketData.CreateInstance<SocketData>();
                             newSocketData.CopySocketIDs(currentTile.TileData.TileSocketData);
                             tileDatas[tileDatas.Count - 1].TileSocketData = newSocketData;
-                            AddAllNeighbouringSocketsToSocketData(tileDatas[tileDatas.Count - 1].TileSocketData, new Vector3Int(x, y, z));
+                            AddAllNeighbouringSocketsToSocketData(tileDatas[tileDatas.Count - 1].TileSocketData, new Vector3Int(x, y, z), GetNumberOf90DegreeTurnsFromRotationAngle(currentTile.transform.rotation.eulerAngles.y));
                         }
                         // Add all the nearby sockets to its lists
 
@@ -237,86 +237,131 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         return false;
     }
 
-    private void AddAllNeighbouringSocketsToSocketData(SocketData socketData, Vector3Int gridCoords)
+    private void AddAllNeighbouringSocketsToSocketData(SocketData socketData, Vector3Int gridCoords, int numberOf90TurnsFromRotation)
     {
-        // Right Face
-        if (gridCoords.x + 1 < gridDimensions.x)
+        // Iterate over every vector3Int Axis
+        for (int i = 0; i < 3; ++i)
         {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, null);
+            // Get the offset
+            Vector3Int offset = Vector3Int.zero;
+            offset[i] = 1;
+            // Adjust the direction to add to based on the object's rotation
+            SocketData.Sides sideDirection = SocketData.RotateSidesDirection(SocketData.GetSideFromCooridnateOff(offset), 4 - numberOf90TurnsFromRotation);
+
+            // Check if the offset gird coordinate is within the grid to assign the tile component that is at the offset position
+            TileComponent tileComponent = null;
+            if (gridCoords[i] + 1 < gridDimensions[i])
+            {
+                Vector3Int offestPosition = gridCoords + offset;
+                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
+            }
+
+            // Add the opposing sockets to this
+            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
+
+            // Do the same to the opposite side
+            offset[i] = -1;
+            sideDirection = SocketData.GetOpposingSocket(sideDirection);
+            tileComponent = null; 
+            if (gridCoords[i] - 1 > -1)
+            {
+                Vector3Int offestPosition = gridCoords + offset;
+                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
+            }
+            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
         }
 
-        // Left Face
-        if (gridCoords.x - 1 > -1)
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, null);
-        }
+        //// Right Face
+        //if (gridCoords.x + 1 < gridDimensions.x)
+        //{
+        //    socketDirection = SocketData.Sides.Right;
 
-        // Above Face
-        if (gridCoords.y + 1 < gridDimensions.y)
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, null);
-        }
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, null);
+        //}
 
-        // Below Face
-        if (gridCoords.y - 1 > -1)
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, null);
-        }
+        //// Left Face
+        //if (gridCoords.x - 1 > -1)
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, null);
+        //}
 
-        // Front Face
-        if (gridCoords.z + 1 < gridDimensions.z)
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, null);
-        }
+        //// Above Face
+        //if (gridCoords.y + 1 < gridDimensions.y)
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, null);
+        //}
 
-        // Back Face
-        if (gridCoords.z - 1 > -1)
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
-        }
-        else
-        {
-            AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, null);
-        }
+        //// Below Face
+        //if (gridCoords.y - 1 > -1)
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, null);
+        //}
+
+        //// Front Face
+        //if (gridCoords.z + 1 < gridDimensions.z)
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, null);
+        //}
+
+        //// Back Face
+        //if (gridCoords.z - 1 > -1)
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
+        //}
+        //else
+        //{
+        //    AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, null);
+        //}
+
+        // Rotate the socket side to be correct for the rotation of the tile
     }
 
-    private void AddOpposingSocketToValidSockets(SocketData.Sides socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
+    private void AddOpposingSocketToValidSockets(SocketData.Sides SideBeingAddedToo, SocketData.Sides socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
     {
+        // Check rotation of the opposing tile component 
         int opposingID;
+        SocketData.Sides otherSocketDirection = SocketData.Sides.Undecided;
         if (opposingTileComponent != null)
         {
-            opposingID = opposingTileComponent.TileData.TileSocketData.GetIdOfSide(SocketData.GetOpposingSocket(socketDirection));
+            otherSocketDirection = SocketData.GetOpposingSocket(socketDirection);
+            otherSocketDirection = SocketData.RotateSidesDirection(otherSocketDirection, 4 - GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y));
+            opposingID = opposingTileComponent.TileData.TileSocketData.GetIdOfSide(otherSocketDirection);
         }
         else
         {
             opposingID = -1;
         }
 
-        List<int> validNeighbourList = socketDataToAddTo.validNeighbours.GetValidNeighbourListForSide(socketDirection);
+        List<int> validNeighbourList = socketDataToAddTo.validNeighbours.GetValidNeighbourListForSide(SideBeingAddedToo);
 
         if (!validNeighbourList.Contains(opposingID))
         {
             validNeighbourList.Add(opposingID);
+            if (SideBeingAddedToo != socketDirection)
+            {
+                Debug.Log("Other tile rotated: " + GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y) + " times");
+                Debug.Log("Adding " + otherSocketDirection + " facing socket to " + SideBeingAddedToo + " Socket, connection direction: " + socketDirection);
+            }
         }
     }
     // Todo 
@@ -375,6 +420,31 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         }
 
         return newTileComponents;
+    }
+
+    private int GetNumberOf90DegreeTurnsFromRotationAngle(float rotation)
+    {
+        // Check rotation of the opposing tile component 
+        float clockwiseRotation = rotation;
+        if (rotation < 0)
+        {
+            clockwiseRotation = 360 + rotation;
+        }
+
+        // If it is rotated then adjust the side that must be gotten accordingly
+        if (Mathf.Round(clockwiseRotation) == 90f)
+        {
+            return 1;
+        }
+        else if (Mathf.Round(clockwiseRotation) == 180f)
+        {
+            return 2;
+        }
+        else if (Mathf.Round(clockwiseRotation) == 270f)
+        {
+            return 3;
+        }
+        return 0;
     }
 
     //private void FillInAreaWithTile(Vector3Int bottemLeft, Vector3Int topRight, TileComponent tileToPlace)

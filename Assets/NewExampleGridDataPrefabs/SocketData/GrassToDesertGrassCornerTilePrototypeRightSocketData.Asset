@@ -18,5 +18,5 @@ MonoBehaviour:
     belowNeighbours: ffffffff
     frontNeighbours: 01000000
     rightNeighbours: 01000000
-    backNeighbours: 10000000
-    leftNeighbours: 0d000000
+    backNeighbours: 100000000c000000
+    leftNeighbours: 0d00000011000000

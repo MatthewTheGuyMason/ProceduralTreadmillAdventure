@@ -142,6 +142,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileData:
     id: 7
-    baseTileWeight: 0.102000006
+    baseTileWeight: 0.11000001
     tileSocketData: {fileID: 11400000, guid: fc1fd06c9bbe40d4b9be1c67091cc294, type: 2}
     tileType: 2
