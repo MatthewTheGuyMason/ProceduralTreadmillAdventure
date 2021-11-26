@@ -32,7 +32,8 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private ExampleGridData exampleGridData;
 
-
+    [SerializeField]
+    private UnityEngine.UI.Slider progressSlider;
 
 #if UNITY_EDITOR
     [SerializeField]
@@ -43,26 +44,27 @@ public class TileGrid : MonoBehaviour
     private void Start()
     {
         tileGrid = new TileComponent[gridDimensions.x][][];
-        for (int i = 0; i < tileGrid.Length; ++i)
+        for (int x = 0; x < gridDimensions.x; ++x)
         {
-            tileGrid[i] = new TileComponent[gridDimensions.y][];
-            for (int k = 0; k < tileGrid[i].Length; ++k)
+            tileGrid[x] = new TileComponent[gridDimensions.y][];
+            for (int y = 0; y < gridDimensions.y; ++y)
             {
-                tileGrid[i][k] = new TileComponent[gridDimensions.z];
+                tileGrid[x][y] = new TileComponent[gridDimensions.z];
             }
         }
 
         possibilitySpace = new List<TileComponent>[gridDimensions.x][][];
-        for (int i = 0; i < possibilitySpace.Length; ++i)
+        for (int x = 0; x < gridDimensions.x; ++x)
         {
-            possibilitySpace[i] = new List<TileComponent>[gridDimensions.y][];
-            for (int j = 0; j < possibilitySpace[i].Length; ++j)
+            possibilitySpace[x] = new List<TileComponent>[gridDimensions.y][];
+            for (int y = 0; y < gridDimensions.y; ++y)
             {
-                possibilitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
-                //for (int k = 0; k < proabailitySpace[i][j].Length; ++k)
-                //{
-                //    proabailitySpace[i][j][k] = new List<Tile>();
-                //}
+                possibilitySpace[x][y] = new List<TileComponent>[gridDimensions.z];
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
+                    possibilitySpace[x][y][z].AddRange(exampleGridData.tilePrefabs);
+                }
             }
         }
 
@@ -103,7 +105,12 @@ public class TileGrid : MonoBehaviour
 
     private void WaveFunctionCollapse()
     {
+        progressSlider.maxValue = gridDimensions.x * gridDimensions.y * gridDimensions.z;
+        progressSlider.value = 0f;
+        //UpdateEntireProbalitySpace();
         StartCoroutine(PlacementInteration());
+
+
 
         //// Build the initial possibility space
         //for (int x = 0; x < gridDimensions.x; ++x)
@@ -338,47 +345,65 @@ public class TileGrid : MonoBehaviour
 
     private void UpdateEntireProbalitySpace()
     {
+        bool samePossibilities = true;
         for (int x = 0; x < gridDimensions.x; ++x)
         {
             for (int y = 0; y < gridDimensions.y; ++y)
             {
                 for (int z = 0; z < gridDimensions.z; ++z)
                 {
+                    List<TileComponent> previousPossibilites = new List<TileComponent>(possibilitySpace[x][y][z]);
                     possibilitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
+
+                    if (possibilitySpace[x][y][z].Count == 0)
+                    {
+                        Debug.LogError("Possibility space was empty for tile at grid position:" + new Vector3Int(x, y, z).ToString());
+                    }
+                    for (int i = 0; i < previousPossibilites.Count; ++i)
+                    {
+                        if (!possibilitySpace[x][y][z].Contains(previousPossibilites[i]))
+                        {
+                            samePossibilities = false;
+                            break;
+                        }
+                    }
                 }
             }
+        }
+        if (!samePossibilities)
+        {
+            UpdateEntireProbalitySpace();
         }
     }
 
     private IEnumerator PlacementInteration()
     {
-        // Build the initial possibility space
-        for (int x = 0; x < gridDimensions.x; ++x)
-        {
-            for (int y = 0; y < gridDimensions.y; ++y)
-            {
-                for (int z = 0; z < gridDimensions.z; ++z)
-                {
-                    possibilitySpace[x][y][z] = GetPossibilitySpaceForSingleTile(x, y, z);
-                }
-            }
-        }
+        UpdateEntireProbalitySpace();
 
         for (int i = 0; i < gridDimensions.x * gridDimensions.y * gridDimensions.z; ++i)
         {
+            UpdateEntireProbalitySpace();
+
             // Find the lowest entropy value
             float lowestEntropyValue = float.MaxValue;
-            Vector3Int lowestEntropyTilesCoords = Vector3Int.zero;
+            Vector3Int lowestEntropyTilesCoords = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+            int count = 0;
             for (int x = 0; x < gridDimensions.x; ++x)
             {
                 for (int y = 0; y < gridDimensions.y; ++y)
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-                        float entropy = GetShannonEntropy(possibilitySpace[x][y][z]);
-                        if (entropy < lowestEntropyValue)
+                        if (tileGrid[x][y][z] == null && i > 349)
                         {
-                            if (tileGrid[x][y][z] == null)
+                            int fish = 0;
+                            fish++;
+                        }
+                        if (tileGrid[x][y][z] == null)
+                        {
+                            float entropy = GetShannonEntropy(possibilitySpace[x][y][z]);
+                            ++count;
+                            if (entropy < lowestEntropyValue)
                             {
                                 lowestEntropyValue = entropy;
                                 lowestEntropyTilesCoords = new Vector3Int(x, y, z);
@@ -386,11 +411,6 @@ public class TileGrid : MonoBehaviour
                         }
                     }
                 }
-            }
-
-            if (lowestEntropyValue == 0)
-            {
-                int fish = 0;
             }
 
             // Get all the tile with that level of entropy
@@ -416,21 +436,24 @@ public class TileGrid : MonoBehaviour
             //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
             TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            Debug.Log(newTileComponent);
+            ++progressSlider.value;
             if (newTileComponent != null)
             {
                 tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
                 GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
                 lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
-
-
+                Debug.DrawLine(transform.position, new Vector3(lowestEntropyTilesCoords.x,
+                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), Color.green, 1000f);
             }
             else
             {
+                Debug.LogError("Generation failed");
                 ResetGenAttempt();
             }
 
             // Propagate across to the grid
-            UpdateEntireProbalitySpace();
+
             //PropergateChangeAcrossTileGrid(randomTileCoords.x, randomTileCoords.y, randomTileCoords.z);
 
             yield return new WaitForSeconds(timeBetweenPlacements);
@@ -497,6 +520,7 @@ public class TileGrid : MonoBehaviour
                 {
                     if (tileGrid[i][j][k] != null)
                     {
+
                         Destroy(tileGrid[i][j][k].gameObject);
                     }
                 }
@@ -527,6 +551,7 @@ public class TileGrid : MonoBehaviour
                 //}
             }
         }
+        progressSlider.value = 0f;
     }
 
     //private void BuildTileSetProtoTypes()

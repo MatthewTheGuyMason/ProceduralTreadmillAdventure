@@ -77,6 +77,11 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                 for (int i = 0; i < tileDatas.Count; ++i)
                 {
                     AssetDatabase.CreateAsset(tileDatas[i].TileSocketData, "Assets/NewExampleGridDataPrefabs/SocketData/" + prefabBasis[i].name + "SocketData.Asset");
+                    if (PrefabUtility.IsPartOfAnyPrefab(prefabBasis[i]))
+                    {
+                        PrefabUtility.UnpackPrefabInstance(prefabBasis[i], PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                    }
+
                     newPrefabs.Add(PrefabUtility.SaveAsPrefabAsset(prefabBasis[i], "Assets/NewExampleGridDataPrefabs/" + prefabBasis[i].name + ".prefab"));
                     if (newPrefabs[newPrefabs.Count - 1].TryGetComponent<TileComponent>(out TileComponent newTileComponent))
                     {
