@@ -20,6 +20,8 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private List<TileComponent>[][][] possibilitySpace;
 
+    private GameObject[][][][] possibilitySpaceObjects;
+
     [SerializeField]
     private Vector3Int gridDimensions;
 
@@ -35,6 +37,9 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private UnityEngine.UI.Slider progressSlider;
 
+    //[SerializeField]
+    //private int seed;
+
 #if UNITY_EDITOR
     [SerializeField]
     private bool showGrid;
@@ -43,6 +48,18 @@ public class TileGrid : MonoBehaviour
 
     private void Start()
     {
+        //Random.InitState(seed);
+        // Strip out any tiles with a weight of 0 for safety
+        for (int i = 0; i < exampleGridData.tilePrefabs.Count; ++i)
+        {
+            if (exampleGridData.tilePrefabs[i].TileData.Weight <= 0.0f)
+            {
+                exampleGridData.tilePrefabs.RemoveAt(i);
+                --i;
+            }
+
+        }
+
         tileGrid = new TileComponent[gridDimensions.x][][];
         for (int x = 0; x < gridDimensions.x; ++x)
         {
@@ -64,6 +81,20 @@ public class TileGrid : MonoBehaviour
                 {
                     possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
                     possibilitySpace[x][y][z].AddRange(exampleGridData.tilePrefabs);
+                }
+            }
+        }
+
+        possibilitySpaceObjects = new GameObject[gridDimensions.x][][][];
+        for (int x = 0; x < gridDimensions.x; ++x)
+        {
+            possibilitySpaceObjects[x] = new GameObject[gridDimensions.y][][];
+            for (int y = 0; y < gridDimensions.y; ++y)
+            {
+                possibilitySpaceObjects[x][y] = new GameObject[gridDimensions.z][];
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    possibilitySpaceObjects[x][y][z] = new GameObject[0];
                 }
             }
         }
@@ -92,12 +123,14 @@ public class TileGrid : MonoBehaviour
 
     private float GetShannonEntropy(List<TileComponent> possibilitySpace)
     {
+        List<TileComponent> uniqueIdTiles = GetUniqueIDTilesFromList(possibilitySpace);
+
         float weightSum = 0.0f;
         float weightTimesLogWeight = 0.0f;
-        for (int i = 0; i < possibilitySpace.Count; ++i)
+        for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            weightSum += possibilitySpace[i].TileData.Weight;
-            weightTimesLogWeight += possibilitySpace[i].TileData.Weight * Mathf.Log(possibilitySpace[i].TileData.Weight);
+            weightSum += uniqueIdTiles[i].TileData.Weight;
+            weightTimesLogWeight += uniqueIdTiles[i].TileData.Weight * Mathf.Log(uniqueIdTiles[i].TileData.Weight);
         }
 
         return Mathf.Log(weightSum) - weightTimesLogWeight / weightSum;
@@ -109,8 +142,6 @@ public class TileGrid : MonoBehaviour
         progressSlider.value = 0f;
         //UpdateEntireProbalitySpace();
         StartCoroutine(PlacementInteration());
-
-
 
         //// Build the initial possibility space
         //for (int x = 0; x < gridDimensions.x; ++x)
@@ -191,13 +222,17 @@ public class TileGrid : MonoBehaviour
 
     private List<TileComponent> GetPossibilitySpaceForSingleTile(int xPosition, int yPosition, int zPosition)
     {
+        if (tileGrid[xPosition][yPosition][zPosition] != null)
+        {
+            return new List<TileComponent>(1) { tileGrid[xPosition][yPosition][zPosition] };
+        }
         List<TileComponent> validTiles = new List<TileComponent>(exampleGridData.tilePrefabs);
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
-        if (yPosition > 0)
-        {
-            validTiles.RemoveAll(tile => tile.TileData.TileType == TileData.TileTypes.Floor);
-        }
+        //if (yPosition > 0)
+        //{
+        //    validTiles.RemoveAll(tile => tile.TileData.TileType == TileData.TileTypes.Floor);
+        //}
         //// Only floor can be placed at floor level
         //else
         //{
@@ -283,65 +318,94 @@ public class TileGrid : MonoBehaviour
 
     private TileComponent GetRandomTileFromProababilitySpace(int xPosition, int yPosition, int zPosition)
     {
+        // Group the tiles but weights
+        List<TileComponent> uniqueIdTiles = GetUniqueIDTilesFromList(possibilitySpace[xPosition][yPosition][zPosition]);
+
         // Add together the weightings
         float maxWeighting = 0.0f;
-        for (int i = 0; i < possibilitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            maxWeighting += possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
+            maxWeighting += uniqueIdTiles[i].TileData.Weight;
         }
         // Roll a random number between 0 and the max value
         float randomNumber = Random.Range(0.0f, maxWeighting);
 
+
+
         // Iterate over the possibility until there is a number between the current total weight and the current total weight
         float currentWeight = 0.0f;
-        for (int i = 0; i < possibilitySpace[xPosition][yPosition][zPosition].Count; ++i)
+        int selectedTileId = -1;
+        for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            if (randomNumber < currentWeight + possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight)
+            if (randomNumber < currentWeight + uniqueIdTiles[i].TileData.Weight)
             {
-                return possibilitySpace[xPosition][yPosition][zPosition][i];
+                selectedTileId = i;
+                break;
             }
-            currentWeight += possibilitySpace[xPosition][yPosition][zPosition][i].TileData.Weight;
+            currentWeight += uniqueIdTiles[i].TileData.Weight;
         }
+
+        if (selectedTileId > -1)
+        {
+            // Get the id of the selected tile
+            int selectedID = uniqueIdTiles[selectedTileId].TileData.ID;
+            // Randomly pick from the possible tiles with the same ID
+            List<TileComponent> idMatchingTiles = new List<TileComponent>(4);
+            for (int i = 0; i < possibilitySpace[xPosition][yPosition][zPosition].Count; ++i)
+            {
+                if (possibilitySpace[xPosition][yPosition][zPosition][i].TileData.ID == selectedID)
+                {
+                    idMatchingTiles.Add(possibilitySpace[xPosition][yPosition][zPosition][i]);
+                }
+            }
+            return idMatchingTiles[Random.Range(0, idMatchingTiles.Count)];
+        }
+
         Debug.LogError("No tile able to be selected in probability space");
         return null;
         //return proabailitySpace[xPosition][yPosition][zPosition][Random.Range(0, proabailitySpace[xPosition][yPosition][zPosition].Count)];
     }
 
-    private void PropergateChangeAcrossTileGrid(int xPosition, int yPosition, int zPosition)
-    {
-        for (int x = xPosition - 1; x < xPosition + 1; ++x)
-        {
-            for (int y = yPosition - 1; y < yPosition + 1; ++y)
-            {
-                for (int z = zPosition - 1; z < zPosition + 1; ++z)
-                {
-                    if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
-                    {
-                        List<TileComponent> currentPossiblitySpace = possibilitySpace[xPosition][yPosition][zPosition];
-                        List<TileComponent> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
-                        currentPossiblitySpace.Sort(new TileComparer());
-                        newProabilitySpace.Sort(new TileComparer());
-                        if (newProabilitySpace.Count != currentPossiblitySpace.Count)
-                        {
-                            possibilitySpace[x][y][z] = newProabilitySpace;
-                            PropergateChangeAcrossTileGrid(x, y, z);
-                            break;
-                        }
-                        for (int i = 0; i < currentPossiblitySpace.Count; ++i)
-                        {
-                            // if the space has changed, propagate over these new tiles
-                            if (currentPossiblitySpace[i].TileData.ID != newProabilitySpace[i].TileData.ID)
-                            {
-
-                                possibilitySpace[x][y][z] = newProabilitySpace;
-                                PropergateChangeAcrossTileGrid(x, y, z);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //private void PropergateChangeAcrossTileGrid(int xPosition, int yPosition, int zPosition)
+    //{
+    //    for (int x = xPosition - 1; x < xPosition + 1; ++x)
+    //    {
+    //        for (int y = yPosition - 1; y < yPosition + 1; ++y)
+    //        {
+    //            for (int z = zPosition - 1; z < zPosition + 1; ++z)
+    //            {
+    //                if (x >= 0 && x < gridDimensions.x && y >= 0 && y < gridDimensions.y && z >= 0 && z < gridDimensions.z)
+    //                {
+    //                    List<TileComponent> currentPossiblitySpace = possibilitySpace[xPosition][yPosition][zPosition];
+    //                    List<TileComponent> newProabilitySpace = GetPossibilitySpaceForSingleTile(xPosition, yPosition, zPosition);
+    //                    currentPossiblitySpace.Sort(new TileComparer());
+    //                    newProabilitySpace.Sort(new TileComparer());
+    //                    if (newProabilitySpace.Count != currentPossiblitySpace.Count)
+    //                    {
+    //                        possibilitySpace[x][y][z] = newProabilitySpace;
+    //                        PropergateChangeAcrossTileGrid(x, y, z);
+    //                        break;
+    //                    }
+    //                    for (int i = 0; i < currentPossiblitySpace.Count; ++i)
+    //                    {
+    //                        // if the space has changed, propagate over these new tiles
+    //                        if (currentPossiblitySpace[i].TileData.ID != newProabilitySpace[i].TileData.ID)
+    //                        {
+    //                            possibilitySpace[x][y][z] = newProabilitySpace;
+    //                            PropergateChangeAcrossTileGrid(x, y, z);
+    //                            for (int j = 0; i < possibilitySpaceObjects[x][y][z].Length; ++i)
+    //                            {
+    //                                GameObject.Destroy(possibilitySpaceObjects[x][y][z][j]);
+    //                            }
+    //                            AddProabilitySpaceObjects(newProabilitySpace, new Vector3Int(x, y, z));
+    //                            possibilitySpaceObjects[x][y][z] = AddProabilitySpaceObjects(newProabilitySpace, new Vector3Int(x, y, z));
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     private void UpdateEntireProbalitySpace()
     {
@@ -359,13 +423,23 @@ public class TileGrid : MonoBehaviour
                     {
                         Debug.LogError("Possibility space was empty for tile at grid position:" + new Vector3Int(x, y, z).ToString());
                     }
+                    bool samePossibilitesForThisSpace = true;
                     for (int i = 0; i < previousPossibilites.Count; ++i)
                     {
                         if (!possibilitySpace[x][y][z].Contains(previousPossibilites[i]))
                         {
                             samePossibilities = false;
+                            samePossibilitesForThisSpace = false;
                             break;
                         }
+                    }
+                    if (!samePossibilitesForThisSpace)
+                    {
+                        for (int j = 0; j < possibilitySpaceObjects[x][y][z].Length; ++j)
+                        {
+                            GameObject.Destroy(possibilitySpaceObjects[x][y][z][j]);
+                        }
+                        possibilitySpaceObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
                     }
                 }
             }
@@ -394,15 +468,15 @@ public class TileGrid : MonoBehaviour
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-                        if (tileGrid[x][y][z] == null && i > 349)
-                        {
-                            int fish = 0;
-                            fish++;
-                        }
+
                         if (tileGrid[x][y][z] == null)
                         {
                             float entropy = GetShannonEntropy(possibilitySpace[x][y][z]);
                             ++count;
+                            if (float.IsNaN(entropy))
+                            {
+                                Debug.LogError("Entropy gave NaN result");
+                            }
                             if (entropy < lowestEntropyValue)
                             {
                                 lowestEntropyValue = entropy;
@@ -411,6 +485,10 @@ public class TileGrid : MonoBehaviour
                         }
                     }
                 }
+            }
+            if (count == 0)
+            {
+                Debug.Log("Zero entropies calculated for iteration: " + i);
             }
 
             // Get all the tile with that level of entropy
@@ -436,15 +514,12 @@ public class TileGrid : MonoBehaviour
             //Vector3Int randomTileCoords = lowestEntropyTilesCoords[Random.Range(0, lowestEntropyTilesCoords.Count)];
             // Select tile from its possibilities as the tile to be placed
             TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
-            Debug.Log(newTileComponent);
             ++progressSlider.value;
             if (newTileComponent != null)
             {
                 tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
                 GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
                 lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
-                Debug.DrawLine(transform.position, new Vector3(lowestEntropyTilesCoords.x,
-                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), Color.green, 1000f);
             }
             else
             {
@@ -489,12 +564,20 @@ public class TileGrid : MonoBehaviour
                         {
                             if (returnedTiles[i].TileData.TileSocketData.CheckValidSocketConnection(possibilitySpace[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z][j].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)))
                             {
-                                canMatchWithAnyTile = true;
-                                break;
+                                if (possibilitySpace[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z][j].TileData.TileSocketData.CheckValidSocketConnection(returnedTiles[i].TileData.TileSocketData, sideChecked))
+                                {
+                                    canMatchWithAnyTile = true;
+                                    break;
+                                }
+
                             }
                         }
                         if (!canMatchWithAnyTile)
                         {
+                            if (sideChecked == SocketData.Sides.Below)
+                            {
+                                i = i;
+                            }
                             returnedTiles.RemoveAt(i);
                             --i;
                         }
@@ -552,6 +635,47 @@ public class TileGrid : MonoBehaviour
             }
         }
         progressSlider.value = 0f;
+    }
+
+    private GameObject[] AddProabilitySpaceObjects(List<TileComponent> possibilitySpace, Vector3Int gridPosition)
+    {
+        GameObject[] newGameObjects = new GameObject[possibilitySpace.Count + 1];
+        newGameObjects[0] = new GameObject(gridPosition.ToString());
+        newGameObjects[0].transform.position = gridPosition;
+        for (int i = 1; i < newGameObjects.Length; ++i)
+        {
+            // Get where is should be placed
+            Vector3 position = gridPosition;
+            position -= Vector3.one * 0.5f;
+            position += Vector3.one / (possibilitySpace.Count + 1) * 0.5f;
+            position += Vector3.one / (possibilitySpace.Count + 1) * i;
+            newGameObjects[i] = GameObject.Instantiate(possibilitySpace[i - 1].gameObject, position, possibilitySpace[i - 1].transform.rotation, newGameObjects[0].transform);
+            newGameObjects[i].transform.localScale = Vector3.one / (possibilitySpace.Count + 1);
+        }
+        return newGameObjects;
+    }
+
+    private List<TileComponent> GetUniqueIDTilesFromList(List<TileComponent> SearchedList)
+    {
+        List<TileComponent> uniqueIdTiles = new List<TileComponent>();
+        for (int i = 0; i < SearchedList.Count; ++i)
+        {
+            // Check if the uniqueIdTiles doesn't contain the a tile with same ID
+            bool containsID = false;
+            for (int j = 0; j < uniqueIdTiles.Count; ++j)
+            {
+                if (uniqueIdTiles[j].TileData.ID == SearchedList[i].TileData.ID)
+                {
+                    containsID = true;
+                    break;
+                }
+            }
+            if (!containsID)
+            {
+                uniqueIdTiles.Add(SearchedList[i]);
+            }
+        }
+        return uniqueIdTiles;
     }
 
     //private void BuildTileSetProtoTypes()
