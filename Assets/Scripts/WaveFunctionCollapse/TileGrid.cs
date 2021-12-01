@@ -54,11 +54,16 @@ public class TileGrid : MonoBehaviour
         {
             if (exampleGridData.tilePrefabs[i].TileData.Weight <= 0.0f)
             {
+                Debug.LogWarning("tilePrefabs " + exampleGridData.tilePrefabs[i].gameObject.name + " had zero weighting and so was removed from possible tiles", exampleGridData.tilePrefabs[i].gameObject);
                 exampleGridData.tilePrefabs.RemoveAt(i);
                 --i;
             }
 
         }
+
+        Debug.Log(ShannonEntropy(new float[3] { 0.1f, 0.1f, 0.1f }));
+        Debug.Log(ShannonEntropy(new float[3] { 0.12f, 0.02f, 0.40f }));
+        Debug.Log(ShannonEntropy(new float[1] { 1f }));
 
         tileGrid = new TileComponent[gridDimensions.x][][];
         for (int x = 0; x < gridDimensions.x; ++x)
@@ -121,7 +126,7 @@ public class TileGrid : MonoBehaviour
     }
 #endif
 
-    private float GetShannonEntropy(List<TileComponent> possibilitySpace)
+    private float GetShannonEntropyOfPossibilitySpace(List<TileComponent> possibilitySpace)
     {
         List<TileComponent> uniqueIdTiles = GetUniqueIDTilesFromList(possibilitySpace);
 
@@ -131,6 +136,19 @@ public class TileGrid : MonoBehaviour
         {
             weightSum += uniqueIdTiles[i].TileData.Weight;
             weightTimesLogWeight += uniqueIdTiles[i].TileData.Weight * Mathf.Log(uniqueIdTiles[i].TileData.Weight);
+        }
+
+        return (Mathf.Log(weightSum) - weightTimesLogWeight) / weightSum;
+    }
+
+    private float ShannonEntropy(float[] possibiltyWeights)
+    {
+        float weightSum = 0.0f;
+        float weightTimesLogWeight = 0.0f;
+        for (int i = 0; i < possibiltyWeights.Length; ++i)
+        {
+            weightSum += possibiltyWeights[i];
+            weightTimesLogWeight += possibiltyWeights[i] * Mathf.Log(possibiltyWeights[i]);
         }
 
         return Mathf.Log(weightSum) - weightTimesLogWeight / weightSum;
@@ -471,7 +489,7 @@ public class TileGrid : MonoBehaviour
 
                         if (tileGrid[x][y][z] == null)
                         {
-                            float entropy = GetShannonEntropy(possibilitySpace[x][y][z]);
+                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z]);
                             ++count;
                             if (float.IsNaN(entropy))
                             {

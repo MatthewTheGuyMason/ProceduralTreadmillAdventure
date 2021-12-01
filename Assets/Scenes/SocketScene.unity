@@ -11342,7 +11342,6 @@ MonoBehaviour:
   timeBetweenPlacements: 0
   exampleGridData: {fileID: 11400000, guid: 11d3f967088c6eb4dbdd3f249a825783, type: 2}
   progressSlider: {fileID: 257650988}
-  seed: 7
   showGrid: 0
 --- !u!4 &1535177311
 Transform:
@@ -41818,6 +41817,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4351054648840926046}
+  - component: {fileID: 4351054648840926048}
   m_Layer: 0
   m_Name: ExampleGrid
   m_TagString: Untagged
@@ -41825,6 +41825,47 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &4351054648840926048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4351054648840926047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8caacd7a22cc7da4a92c9a29a0108b61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridDimensions: {x: 3, y: 3, z: 3}
+  objectsParentsInGrid:
+  - {fileID: 4351054648666440901}
+  - {fileID: 4351054648071669184}
+  - {fileID: 4351054646887392534}
+  - {fileID: 4351054647772220607}
+  - {fileID: 4351054647527207585}
+  - {fileID: 4351054648662021938}
+  - {fileID: 4351054646977660585}
+  - {fileID: 4351054647853623308}
+  - {fileID: 4351054647773178088}
+  - {fileID: 4351054647589487938}
+  - {fileID: 4351054647237371071}
+  - {fileID: 4351054648075488684}
+  - {fileID: 4351054648370932166}
+  - {fileID: 4351054648779604880}
+  - {fileID: 4351054648645020037}
+  - {fileID: 4351054648209818019}
+  - {fileID: 4351054648587360251}
+  - {fileID: 4351054648263757546}
+  - {fileID: 4351054646981508612}
+  - {fileID: 4351054648668458603}
+  - {fileID: 4351054648748540174}
+  - {fileID: 4351054647035415301}
+  - {fileID: 4351054648611634964}
+  - {fileID: 4351054648226361298}
+  - {fileID: 4351054646960577807}
+  - {fileID: 4351054647096335634}
+  - {fileID: 4351054648339390983}
 --- !u!65 &4351054648908212625
 BoxCollider:
   m_ObjectHideFlags: 0
