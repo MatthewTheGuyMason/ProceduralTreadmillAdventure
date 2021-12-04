@@ -40,6 +40,9 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private bool showPossibillitySpace = true;
 
+    [SerializeField]
+    private BiomeTransitionaryData biomeTransitionaryData;
+
     //[SerializeField]
     //private int seed;
 
@@ -53,16 +56,16 @@ public class TileGrid : MonoBehaviour
     {
         //Random.InitState(seed);
         // Strip out any tiles with a weight of 0 for safety
-        for (int i = 0; i < exampleGridData.tilePrefabs.Count; ++i)
-        {
-            if (exampleGridData.tilePrefabs[i].TileData.Weight <= 0.0f)
-            {
-                Debug.LogWarning("tilePrefabs " + exampleGridData.tilePrefabs[i].gameObject.name + " had zero weighting and so was removed from possible tiles", exampleGridData.tilePrefabs[i].gameObject);
-                exampleGridData.tilePrefabs.RemoveAt(i);
-                --i;
-            }
+        //for (int i = 0; i < exampleGridData.tilePrefabs.Count; ++i)
+        //{
+        //    if (exampleGridData.tilePrefabs[i].TileData.Weight <= 0.0f)
+        //    {
+        //        Debug.LogWarning("tilePrefabs " + exampleGridData.tilePrefabs[i].gameObject.name + " had zero weighting and so was removed from possible tiles", exampleGridData.tilePrefabs[i].gameObject);
+        //        exampleGridData.tilePrefabs.RemoveAt(i);
+        //        --i;
+        //    }
 
-        }
+        //}
 
         Debug.Log(ShannonEntropy(new float[3] { 0.1f, 0.1f, 0.1f }));
         Debug.Log(ShannonEntropy(new float[3] { 0.12f, 0.02f, 0.40f }));
@@ -133,7 +136,7 @@ public class TileGrid : MonoBehaviour
     }
 #endif
 
-    private float GetShannonEntropyOfPossibilitySpace(List<TileComponent> possibilitySpace)
+    private float GetShannonEntropyOfPossibilitySpace(List<TileComponent> possibilitySpace, int yPosition, int xPosition)
     {
         List<TileComponent> uniqueIdTiles = GetUniqueIDTilesFromList(possibilitySpace);
 
@@ -141,8 +144,9 @@ public class TileGrid : MonoBehaviour
         float weightTimesLogWeight = 0.0f;
         for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            weightSum += uniqueIdTiles[i].TileData.Weight;
-            weightTimesLogWeight += uniqueIdTiles[i].TileData.Weight * Mathf.Log(uniqueIdTiles[i].TileData.Weight);
+            float tileWeight = GetWeightOfTileAdjustedForTemp(uniqueIdTiles[i], xPosition, yPosition);
+            weightSum += tileWeight;
+            weightTimesLogWeight += tileWeight * Mathf.Log(tileWeight);
         }
 
         return (Mathf.Log(weightSum) - weightTimesLogWeight) / weightSum;
@@ -252,6 +256,17 @@ public class TileGrid : MonoBehaviour
             return new List<TileComponent>(1) { tileGrid[xPosition][yPosition][zPosition] };
         }
         List<TileComponent> validTiles = new List<TileComponent>(exampleGridData.tilePrefabs);
+
+        // Strip out any and tiles that don't have a chance of spawn at this y position
+        for (int i = 0; i < validTiles.Count; ++i)
+        {
+            if (GetWeightOfTileAdjustedForTemp(validTiles[i], xPosition, yPosition) <= 0f)
+            {
+                validTiles.RemoveAt(i);
+                --i;
+            }
+        }
+
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
         //if (yPosition > 0)
@@ -350,7 +365,8 @@ public class TileGrid : MonoBehaviour
         float maxWeighting = 0.0f;
         for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            maxWeighting += uniqueIdTiles[i].TileData.Weight;
+            maxWeighting += GetWeightOfTileAdjustedForTemp(uniqueIdTiles[i], xPosition, yPosition);
+            //maxWeighting += uniqueIdTiles[i].TileData.GetWeight(yPosition, gridDimensions.y);
         }
         // Roll a random number between 0 and the max value
         float randomNumber = Random.Range(0.0f, maxWeighting);
@@ -362,12 +378,12 @@ public class TileGrid : MonoBehaviour
         int selectedTileId = -1;
         for (int i = 0; i < uniqueIdTiles.Count; ++i)
         {
-            if (randomNumber < currentWeight + uniqueIdTiles[i].TileData.Weight)
+            if (randomNumber < currentWeight + GetWeightOfTileAdjustedForTemp(uniqueIdTiles[i], xPosition, yPosition))
             {
                 selectedTileId = i;
                 break;
             }
-            currentWeight += uniqueIdTiles[i].TileData.Weight;
+            currentWeight += GetWeightOfTileAdjustedForTemp(uniqueIdTiles[i], xPosition, yPosition);
         }
 
         if (selectedTileId > -1)
@@ -432,6 +448,9 @@ public class TileGrid : MonoBehaviour
     //    }
     //}
 
+    /// <summary>
+    /// Updates every tile in the possibility space
+    /// </summary>
     private void UpdateEntireProbalitySpace()
     {
         bool samePossibilities = true;
@@ -474,7 +493,7 @@ public class TileGrid : MonoBehaviour
         }
         if (!samePossibilities)
         {
-            UpdateEntireProbalitySpace();
+            //UpdateEntireProbalitySpace();
         }
     }
 
@@ -496,10 +515,9 @@ public class TileGrid : MonoBehaviour
                 {
                     for (int z = 0; z < gridDimensions.z; ++z)
                     {
-
                         if (tileGrid[x][y][z] == null)
                         {
-                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z]);
+                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z], y, x);
                             ++count;
                             if (float.IsNaN(entropy))
                             {
@@ -704,6 +722,55 @@ public class TileGrid : MonoBehaviour
             }
         }
         return uniqueIdTiles;
+    }
+
+    private float GetWeightOfTileAdjustedForTemp(TileComponent tileComponent, int xPosition, int yPosition)
+    {
+        float baseWeight = tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
+        float transitionWeight;
+        // Get the current weights from the transitional data
+        BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition * 1);
+        switch (tileComponent.TileData.TileBiomeType)
+        {
+            case TileData.BiomeType.Desert:
+                return baseWeight * weights.desertUnitInterval;
+            case TileData.BiomeType.DesertToGrassland:
+                transitionWeight = weights.grasslandUnitInterval - weights.desertUnitInterval;
+                if (transitionWeight < 0)
+                {
+                    transitionWeight *= -1;
+                }
+                transitionWeight = 1 - transitionWeight;
+                return baseWeight * transitionWeight;
+            case TileData.BiomeType.Grassland:
+                return baseWeight * weights.grasslandUnitInterval;
+            case TileData.BiomeType.GrasslandToSnow:
+                transitionWeight = weights.grasslandUnitInterval - weights.tundraUnitInterval;
+                if (transitionWeight < 0)
+                {
+                    transitionWeight *= -1;
+                }
+                transitionWeight = 1 - transitionWeight;
+                return baseWeight * transitionWeight;
+            case TileData.BiomeType.Tundra:
+                return baseWeight * weights.tundraUnitInterval;
+            case TileData.BiomeType.NA:
+                return baseWeight;
+        }
+
+        return baseWeight;
+
+        //float tempreture = Mathf.Sin(xPosition * 2f * Mathf.Deg2Rad) * 2f;
+
+        //// Get the distance from the tiles ideal temperature
+
+        //float distanceToIdeal = tempreture - (float)tileComponent.TileData.TileBiomeType * 2f;
+        //if (distanceToIdeal < 0)
+        //{
+        //    distanceToIdeal *= -1f; 
+        //}
+
+        //return baseWeight * (Mathf.Clamp01(1f - distanceToIdeal));
     }
 
     //private void BuildTileSetProtoTypes()

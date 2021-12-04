@@ -1,0 +1,48 @@
+Making the weight be based on Y value
+	Lerp between the 2 cloeset y Value using decimal left over
+	Replace all the weights with the get weight calc
+	Issue adding the weights to prefabs
+		just never actaully made the array before assigning them
+	was pretty easy and worked well
+	like layering grids on top each other
+Making the weight be effected by biome
+	biome governed by temreture value 
+		tempreture uses sign wave of the x pos
+	distance from ideal temp affect the weighting
+	encountered issue where having 0 weighted tiles prevented generation
+	The trnastion tile had to much chance of spawning
+	making keyframe to define what the the spawning should look like
+	Added some snow tiles
+	Then I broke everything
+	
+1-2
+Grass 100%
+100 Tiles
+
+2-3
+Grass 	100%->0%
+Desert 	0->100%
+10 Tiles
+
+3-4
+Desert 100%
+100 tiles
+
+4-5
+Desert 
+
+
+1
+G = 100 %
+D = 0 %
+S = 0 %
+
+2
+G = 100 %
+D = 0 %
+S = 0 %
+
+3
+G = 100 %
+D = 0 %
+S = 0 %

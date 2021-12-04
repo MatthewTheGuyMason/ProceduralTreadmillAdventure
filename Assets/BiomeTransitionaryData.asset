@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9499e8c13676dc4cbeffa323ec6fb7d, type: 3}
+  m_Name: BiomeTransitionaryData
+  m_EditorClassIdentifier: 
+  transtionKeyframes:
+  - biomeWeights:
+      grasslandUnitInterval: 1
+      desertUnitInterval: 0
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 100
+  - biomeWeights:
+      grasslandUnitInterval: 1
+      desertUnitInterval: 0
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 10
+  - biomeWeights:
+      grasslandUnitInterval: 0
+      desertUnitInterval: 1
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 100
+  - biomeWeights:
+      grasslandUnitInterval: 0
+      desertUnitInterval: 1
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 10
+  - biomeWeights:
+      grasslandUnitInterval: 1
+      desertUnitInterval: 0
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 100
+  - biomeWeights:
+      grasslandUnitInterval: 1
+      desertUnitInterval: 0
+      tundraUnitInterval: 0
+    numberOfTilesTileNextKeyframe: 10
+  - biomeWeights:
+      grasslandUnitInterval: 0
+      desertUnitInterval: 0
+      tundraUnitInterval: 1
+    numberOfTilesTileNextKeyframe: 100
+  - biomeWeights:
+      grasslandUnitInterval: 0
+      desertUnitInterval: 0
+      tundraUnitInterval: 1
+    numberOfTilesTileNextKeyframe: 10

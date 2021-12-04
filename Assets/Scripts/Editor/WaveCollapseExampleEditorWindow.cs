@@ -28,6 +28,10 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
     private TileComponent brushTile;
 
+    private int idToUpdate = -1;
+
+    private TileData.BiomeType biomeTypeToChangeTo;
+
     // Add menu named "My Window" to the Window menu
     [MenuItem("Window/Wave Collapse Example Editor Window")]
     static void Init()
@@ -43,21 +47,22 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         gridController = (ExampleGridController)EditorGUILayout.ObjectField("Grid Parent ExampleGridController", gridController, typeof(ExampleGridController), true);
         defaultTilePrefab = (GameObject)EditorGUILayout.ObjectField("Default Tile Prefab", defaultTilePrefab, typeof(GameObject), false);
 
-        int tilePrefabsInUseArraySize = EditorGUILayout.IntField("Tile Prefabs In Use Size", tilePrefabsInUse.Length);
-        if (tilePrefabsInUseArraySize != tilePrefabsInUse.Length)
-        {
-            GameObject[] newArray = new GameObject[tilePrefabsInUseArraySize];
-            int smallestArrayLength = tilePrefabsInUse.Length < tilePrefabsInUseArraySize ? tilePrefabsInUse.Length : tilePrefabsInUseArraySize;
-            System.Array.Copy(tilePrefabsInUse, newArray, smallestArrayLength);
-            tilePrefabsInUse = newArray;
-        }
-        if (showPrefabsInUseArray = EditorGUILayout.Foldout(showPrefabsInUseArray, "Show Prefabs Array"))
-        {
-            for (int i = 0; i < tilePrefabsInUseArraySize; ++i)
-            {
-                tilePrefabsInUse[i] = (GameObject)EditorGUILayout.ObjectField(tilePrefabsInUse[i], typeof(GameObject), false);
-            }
-        }
+        
+        //int tilePrefabsInUseArraySize = EditorGUILayout.IntField("Tile Prefabs In Use Size", tilePrefabsInUse.Length);
+        //if (tilePrefabsInUseArraySize != tilePrefabsInUse.Length)
+        //{
+        //    GameObject[] newArray = new GameObject[tilePrefabsInUseArraySize];
+        //    int smallestArrayLength = tilePrefabsInUse.Length < tilePrefabsInUseArraySize ? tilePrefabsInUse.Length : tilePrefabsInUseArraySize;
+        //    System.Array.Copy(tilePrefabsInUse, newArray, smallestArrayLength);
+        //    tilePrefabsInUse = newArray;
+        //}
+        //if (showPrefabsInUseArray = EditorGUILayout.Foldout(showPrefabsInUseArray, "Show Prefabs Array"))
+        //{
+        //    for (int i = 0; i < tilePrefabsInUseArraySize; ++i)
+        //    {
+        //        tilePrefabsInUse[i] = (GameObject)EditorGUILayout.ObjectField(tilePrefabsInUse[i], typeof(GameObject), false);
+        //    }
+        //}
 
         if (GUILayout.Button("Build Grid Template"))
         {
@@ -128,6 +133,13 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             gridController.FillInAreaWithTile(brushBottomLeft, brushTopRight, brushTile.gameObject);
             AssetDatabase.SaveAssets();
         }
+
+        idToUpdate = EditorGUILayout.IntField("Id To Update", idToUpdate);
+        biomeTypeToChangeTo = (TileData.BiomeType)EditorGUILayout.EnumPopup("Id To Update", biomeTypeToChangeTo);
+        if (GUILayout.Button("Update biome type of tiles with ID"))
+        {
+            gridController.UpdateBiomeTypeOfTilesWithID(idToUpdate, biomeTypeToChangeTo);
+        }
     }
 
     // Start is called before the first frame update
@@ -140,6 +152,8 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     {
         gridController = new GameObject("ExampleGrid").AddComponent<ExampleGridController>();
         gridController.BuildGridObjectParents(gridDimensions, defaultTilePrefab);
+
+
     }
 
     // TODO: Add some code to detectRotation of a tile and account for it when building the data set
@@ -148,7 +162,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     {
         tileDatas = new List<TileData>();
         prefabBasisObjects = new List<GameObject>();
-        List<int> currentTileFequency = new List<int>();
+        List<int[]> currentTileFequencyForEachYPosition = new List<int[]>();
 
         int tileCount = gridDimensions.x * gridDimensions.y * gridDimensions.z;
 
@@ -195,14 +209,17 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         TileComponent currentTile = tileGrid[x][y][z];
                         if (TryGetTileWithMatchingID(tileDatas, currentTile.TileData.ID, out int index))
                         {
-                            ++currentTileFequency[index];
+                            ++currentTileFequencyForEachYPosition[index][y]; // Adding to the frequency of that tile at the current y position 
                             AddAllNeighbouringSocketsToSocketData(tileDatas[index].TileSocketData, new Vector3Int(x, y, z), GetNumberOf90DegreeTurnsFromRotationAngle(currentTile.transform.rotation.eulerAngles.y));
                         }
                         else
                         {
                             tileDatas.Add(new TileData(currentTile.TileData));
                             prefabBasisObjects.Add(currentTile.gameObject);
-                            currentTileFequency.Add(1);
+                            // Create the new list of arrays for frequency for each y position and add one to the current y position
+                            currentTileFequencyForEachYPosition.Add(new int[gridDimensions.y]);
+                            ++currentTileFequencyForEachYPosition[currentTileFequencyForEachYPosition.Count - 1][y];
+
                             SocketData newSocketData = SocketData.CreateInstance<SocketData>();
                             newSocketData.CopySocketIDs(currentTile.TileData.TileSocketData);
                             tileDatas[tileDatas.Count - 1].TileSocketData = newSocketData;
@@ -217,11 +234,16 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
         // Assign the weights for each tile type
 
-        float weightPerFequency = 1.0f / tileCount;
+        float weightPerFequency = 1.0f / (gridDimensions.x * gridDimensions.z);
 
         for (int i = 0; i < tileDatas.Count; ++i)
         {
-            tileDatas[i].Weight = weightPerFequency * currentTileFequency[i];
+            tileDatas[i].Weights = new float[gridDimensions.y];
+            for (int j = 0; j < tileDatas[i].Weights.Length; ++j)
+            {
+                tileDatas[i].Weights[j] = weightPerFequency * currentTileFequencyForEachYPosition[i][j];
+            }
+
         }
 
         return true;
@@ -461,4 +483,6 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
     //{
     //    int xMultiplier = gridDimensions.
     //}
+
+
 }

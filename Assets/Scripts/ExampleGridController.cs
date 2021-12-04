@@ -41,7 +41,7 @@ public class ExampleGridController : MonoBehaviour
     public void AdjustGridDimensions(Vector3Int newDimensions, GameObject defaultTile = null)
     {
         // Create a jagged array to store the new objects temporarily
-        List<GameObject> newTileParents = new List<GameObject>(newDimensions.x * newDimensions.y * newDimensions.z);
+        GameObject[] newTileParents = new GameObject[newDimensions.x * newDimensions.y * newDimensions.z];
         // Create a new grid of new tile parents
         for (int x = 0; x < newDimensions.x; ++x)
         {
@@ -50,7 +50,7 @@ public class ExampleGridController : MonoBehaviour
                 for (int z = 0; z < newDimensions.z; ++z)
                 {
                     int coordinatesIndex = GetIndexOfCoordinate(new Vector3Int(x, y, z), newDimensions);
-                    newTileParents[coordinatesIndex] = new GameObject(x.ToString() + ", " + y.ToString() + ", " + z.ToString());
+                    newTileParents[coordinatesIndex] = (new GameObject(x.ToString() + ", " + y.ToString() + ", " + z.ToString()));
                     newTileParents[coordinatesIndex].transform.SetParent(transform);
                     newTileParents[coordinatesIndex].transform.localPosition = new Vector3(x, y, z);
                     if (defaultTile != null)
@@ -105,7 +105,7 @@ public class ExampleGridController : MonoBehaviour
         }
 
         // Make this new grid the current grid
-        objectsParentsInGrid = newTileParents;
+        objectsParentsInGrid = new List<GameObject>(newTileParents);
         gridDimensions = newDimensions;
     }
 
@@ -139,5 +139,24 @@ public class ExampleGridController : MonoBehaviour
     public int GetIndexOfCoordinate(Vector3Int coordinate, Vector3Int gridDimensions)
     {
         return gridDimensions.y * gridDimensions.z * coordinate.x + gridDimensions.z * coordinate.y + coordinate.z;
+    }
+
+    public void UpdateBiomeTypeOfTilesWithID(int idToUpdate, TileData.BiomeType typeToChangeTo)
+    {
+        for (int x = 0; x < gridDimensions.x; ++x)
+        {
+            for (int y = 0; y < gridDimensions.y; ++y)
+            {
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    int coordinatesIndex = GetIndexOfCoordinate(new Vector3Int(x, y, z), gridDimensions);
+                    TileComponent tileComponent = objectsParentsInGrid[coordinatesIndex].GetComponentInChildren<TileComponent>();
+                    if (tileComponent.TileData.ID == idToUpdate)
+                    {
+                        tileComponent.TileData.TileBiomeType = typeToChangeTo;
+                    }
+                }
+            }
+        }
     }
 }
