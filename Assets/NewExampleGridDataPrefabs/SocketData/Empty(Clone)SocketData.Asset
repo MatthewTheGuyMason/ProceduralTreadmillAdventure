@@ -15,8 +15,8 @@ MonoBehaviour:
   sideSocketIds: 000000000000000000000000000000000000000000000000
   validNeighbours:
     aboveNeighbours: 00000000ffffffff
-    belowNeighbours: 0b00000000000000030000000a00000012000000010000001300000014000000
-    frontNeighbours: 0000000007000000ffffffff16000000
-    rightNeighbours: 000000000700000016000000ffffffff
-    backNeighbours: ffffffff000000000700000016000000
-    leftNeighbours: ffffffff000000000700000016000000
+    belowNeighbours: 0b000000000000000a000000120000000100000013000000
+    frontNeighbours: 00000000ffffffff
+    rightNeighbours: 00000000ffffffff
+    backNeighbours: ffffffff00000000
+    leftNeighbours: ffffffff00000000

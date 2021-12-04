@@ -37,6 +37,9 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private UnityEngine.UI.Slider progressSlider;
 
+    [SerializeField]
+    private bool showPossibillitySpace = true;
+
     //[SerializeField]
     //private int seed;
 
@@ -90,19 +93,23 @@ public class TileGrid : MonoBehaviour
             }
         }
 
-        possibilitySpaceObjects = new GameObject[gridDimensions.x][][][];
-        for (int x = 0; x < gridDimensions.x; ++x)
+        if (showPossibillitySpace)
         {
-            possibilitySpaceObjects[x] = new GameObject[gridDimensions.y][][];
-            for (int y = 0; y < gridDimensions.y; ++y)
+            possibilitySpaceObjects = new GameObject[gridDimensions.x][][][];
+            for (int x = 0; x < gridDimensions.x; ++x)
             {
-                possibilitySpaceObjects[x][y] = new GameObject[gridDimensions.z][];
-                for (int z = 0; z < gridDimensions.z; ++z)
+                possibilitySpaceObjects[x] = new GameObject[gridDimensions.y][][];
+                for (int y = 0; y < gridDimensions.y; ++y)
                 {
-                    possibilitySpaceObjects[x][y][z] = new GameObject[0];
+                    possibilitySpaceObjects[x][y] = new GameObject[gridDimensions.z][];
+                    for (int z = 0; z < gridDimensions.z; ++z)
+                    {
+                        possibilitySpaceObjects[x][y][z] = new GameObject[0];
+                    }
                 }
             }
         }
+
 
         WaveFunctionCollapse();
     }
@@ -451,13 +458,16 @@ public class TileGrid : MonoBehaviour
                             break;
                         }
                     }
-                    if (!samePossibilitesForThisSpace)
+                    if (showPossibillitySpace)
                     {
-                        for (int j = 0; j < possibilitySpaceObjects[x][y][z].Length; ++j)
+                        if (!samePossibilitesForThisSpace)
                         {
-                            GameObject.Destroy(possibilitySpaceObjects[x][y][z][j]);
+                            for (int j = 0; j < possibilitySpaceObjects[x][y][z].Length; ++j)
+                            {
+                                GameObject.Destroy(possibilitySpaceObjects[x][y][z][j]);
+                            }
+                            possibilitySpaceObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
                         }
-                        possibilitySpaceObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
                     }
                 }
             }
