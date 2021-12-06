@@ -726,6 +726,7 @@ public class TileGrid : MonoBehaviour
 
     private float GetWeightOfTileAdjustedForTemp(TileComponent tileComponent, int xPosition, int yPosition)
     {
+        return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float baseWeight = tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float transitionWeight;
         // Get the current weights from the transitional data
@@ -735,20 +736,26 @@ public class TileGrid : MonoBehaviour
             case TileData.BiomeType.Desert:
                 return baseWeight * weights.desertUnitInterval;
             case TileData.BiomeType.DesertToGrassland:
-                transitionWeight = weights.grasslandUnitInterval - weights.desertUnitInterval;
-                if (transitionWeight < 0)
+                if (weights.grasslandUnitInterval > weights.desertUnitInterval)
                 {
-                    transitionWeight *= -1;
+                    transitionWeight = weights.grasslandUnitInterval - weights.desertUnitInterval;
+                }
+                else
+                {
+                    transitionWeight = weights.desertUnitInterval - weights.grasslandUnitInterval;
                 }
                 transitionWeight = 1 - transitionWeight;
                 return baseWeight * transitionWeight;
             case TileData.BiomeType.Grassland:
                 return baseWeight * weights.grasslandUnitInterval;
             case TileData.BiomeType.GrasslandToSnow:
-                transitionWeight = weights.grasslandUnitInterval - weights.tundraUnitInterval;
-                if (transitionWeight < 0)
+                if (weights.grasslandUnitInterval > weights.desertUnitInterval)
                 {
-                    transitionWeight *= -1;
+                    transitionWeight = weights.grasslandUnitInterval - weights.tundraUnitInterval;
+                }
+                else
+                {
+                    transitionWeight = weights.tundraUnitInterval - weights.grasslandUnitInterval;
                 }
                 transitionWeight = 1 - transitionWeight;
                 return baseWeight * transitionWeight;

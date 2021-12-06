@@ -216,6 +216,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         {
                             tileDatas.Add(new TileData(currentTile.TileData));
                             prefabBasisObjects.Add(currentTile.gameObject);
+                            prefabBasisObjects[prefabBasisObjects.Count - 1].transform.rotation = Quaternion.identity;
                             // Create the new list of arrays for frequency for each y position and add one to the current y position
                             currentTileFequencyForEachYPosition.Add(new int[gridDimensions.y]);
                             ++currentTileFequencyForEachYPosition[currentTileFequencyForEachYPosition.Count - 1][y];
@@ -386,8 +387,11 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
             validNeighbourList.Add(opposingID);
             if (SideBeingAddedToo != socketDirection)
             {
-                Debug.Log("Other tile rotated: " + GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y) + " times");
-                Debug.Log("Adding " + otherSocketDirection + " facing socket to " + SideBeingAddedToo + " Socket, connection direction: " + socketDirection);
+                if (opposingID != -1)
+                {
+                    Debug.Log("Other tile rotated: " + GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y) + " times");
+                    Debug.Log("Adding " + otherSocketDirection + " facing socket to " + SideBeingAddedToo + " Socket, connection direction: " + socketDirection);
+                }
             }
         }
     }
