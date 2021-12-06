@@ -46,6 +46,9 @@ public class TileGrid : MonoBehaviour
     //[SerializeField]
     //private int seed;
 
+    [SerializeField]
+    private TileComponent defaultTile;
+
 #if UNITY_EDITOR
     [SerializeField]
     private bool showGrid;
@@ -66,10 +69,6 @@ public class TileGrid : MonoBehaviour
         //    }
 
         //}
-
-        Debug.Log(ShannonEntropy(new float[3] { 0.1f, 0.1f, 0.1f }));
-        Debug.Log(ShannonEntropy(new float[3] { 0.12f, 0.02f, 0.40f }));
-        Debug.Log(ShannonEntropy(new float[1] { 1f }));
 
         tileGrid = new TileComponent[gridDimensions.x][][];
         for (int x = 0; x < gridDimensions.x; ++x)
@@ -267,6 +266,13 @@ public class TileGrid : MonoBehaviour
             }
         }
 
+        if (validTiles.Count == 0)
+        {
+            Debug.Log("Failed at valid weights");
+            return validTiles;
+        }
+
+
         // Check the position to see what tiles are valid
         // Floor tile can't be placed off the floor
         //if (yPosition > 0)
@@ -352,6 +358,16 @@ public class TileGrid : MonoBehaviour
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.right,    0, SocketData.Sides.Right);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.back,     2, SocketData.Sides.Back);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.left,     0, SocketData.Sides.Left);
+
+        //if (validTiles.Count == 0)
+        //{
+        //    validTiles.Add(defaultTile);
+        //}
+
+        if (validTiles.Count == 0)
+        {
+            Debug.Log("Failed at Sockets");
+        }
 
         return validTiles;
     }
@@ -466,6 +482,8 @@ public class TileGrid : MonoBehaviour
                     if (possibilitySpace[x][y][z].Count == 0)
                     {
                         Debug.LogError("Possibility space was empty for tile at grid position:" + new Vector3Int(x, y, z).ToString());
+                        //BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(x);
+                        //Debug.Log(weights.desertUnitInterval + " " + weights.grasslandUnitInterval + " " + weights.tundraUnitInterval);
                     }
                     bool samePossibilitesForThisSpace = true;
                     for (int i = 0; i < previousPossibilites.Count; ++i)
@@ -726,39 +744,55 @@ public class TileGrid : MonoBehaviour
 
     private float GetWeightOfTileAdjustedForTemp(TileComponent tileComponent, int xPosition, int yPosition)
     {
-        return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
+        //return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float baseWeight = tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float transitionWeight;
         // Get the current weights from the transitional data
-        BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition * 1);
+        BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition * 2);
         switch (tileComponent.TileData.TileBiomeType)
         {
             case TileData.BiomeType.Desert:
                 return baseWeight * weights.desertUnitInterval;
             case TileData.BiomeType.DesertToGrassland:
-                if (weights.grasslandUnitInterval > weights.desertUnitInterval)
+                if (weights.grasslandUnitInterval > 0 && weights.desertUnitInterval > 0)
                 {
-                    transitionWeight = weights.grasslandUnitInterval - weights.desertUnitInterval;
+                    if (weights.grasslandUnitInterval > weights.desertUnitInterval)
+                    {
+                        transitionWeight = weights.grasslandUnitInterval - weights.desertUnitInterval;
+                    }
+                    else
+                    {
+                        transitionWeight = weights.desertUnitInterval - weights.grasslandUnitInterval;
+                    }
+                    transitionWeight = 1 - transitionWeight;
+                    return baseWeight * transitionWeight;
                 }
                 else
                 {
-                    transitionWeight = weights.desertUnitInterval - weights.grasslandUnitInterval;
+                    return 0;
                 }
-                transitionWeight = 1 - transitionWeight;
-                return baseWeight * transitionWeight;
+
+
             case TileData.BiomeType.Grassland:
                 return baseWeight * weights.grasslandUnitInterval;
             case TileData.BiomeType.GrasslandToSnow:
-                if (weights.grasslandUnitInterval > weights.desertUnitInterval)
+                if (weights.grasslandUnitInterval > 0 && weights.tundraUnitInterval > 0)
                 {
-                    transitionWeight = weights.grasslandUnitInterval - weights.tundraUnitInterval;
+                    if (weights.grasslandUnitInterval > weights.tundraUnitInterval)
+                    {
+                        transitionWeight = weights.grasslandUnitInterval - weights.tundraUnitInterval;
+                    }
+                    else
+                    {
+                        transitionWeight = weights.tundraUnitInterval - weights.grasslandUnitInterval;
+                    }
+                    transitionWeight = 1 - transitionWeight;
+                    return baseWeight * transitionWeight;
                 }
                 else
                 {
-                    transitionWeight = weights.tundraUnitInterval - weights.grasslandUnitInterval;
+                    return 0;
                 }
-                transitionWeight = 1 - transitionWeight;
-                return baseWeight * transitionWeight;
             case TileData.BiomeType.Tundra:
                 return baseWeight * weights.tundraUnitInterval;
             case TileData.BiomeType.NA:

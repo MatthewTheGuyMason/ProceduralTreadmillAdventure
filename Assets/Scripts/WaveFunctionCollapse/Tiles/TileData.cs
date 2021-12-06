@@ -138,11 +138,19 @@ public class TileData
     /// <returns></returns>
     public virtual float GetWeight(int yGridCoords, int gridHeight)
     {
-        float gridCoordDistance = baseTileWeights.Length / gridHeight;   // Get how much each index is work in relation to the grid height
+        float gridCoordDistance = (float)baseTileWeights.Length / (float)gridHeight;   // Get how much each index is work in relation to the grid height
         float gridPosition = yGridCoords * gridCoordDistance;           // Move that far up the weight indexes
         int lowerIndex = Mathf.FloorToInt(gridPosition);                // Get the lower index
         int upperIndex = Mathf.CeilToInt(gridPosition);                 // Get the upper index
         float leftOverDecimal = gridPosition - lowerIndex;              // Get the decimal that is left over between the index
+        if (upperIndex >= baseTileWeights.Length)
+        {
+            return baseTileWeights[baseTileWeights.Length - 1];
+        }
+        if (lowerIndex >= baseTileWeights.Length || upperIndex >= baseTileWeights.Length || baseTileWeights.Length == 0 || lowerIndex < 0 || upperIndex < 0)
+        {
+            Debug.Log("HERE!");
+        }
         return Mathf.Lerp(baseTileWeights[lowerIndex], baseTileWeights[upperIndex], leftOverDecimal); // return the weight lerp between the 2 closet values using the demical
     }
     #endregion
@@ -155,7 +163,8 @@ public class TileData
     public TileData(TileData tileData)
     {
         id = tileData.id;
-        baseTileWeights = tileData.baseTileWeights;
+        baseTileWeights = new float[tileData.baseTileWeights.Length];
+        tileData.Weights.CopyTo(baseTileWeights, 0);
         tileSocketData = tileData.tileSocketData;
         tileType = tileData.tileType;
         GridCoordinates = tileData.GridCoordinates;

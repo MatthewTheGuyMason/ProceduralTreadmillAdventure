@@ -86,12 +86,13 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                     {
                         PrefabUtility.UnpackPrefabInstance(prefabBasis[i], PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
                     }
-
                     newPrefabs.Add(PrefabUtility.SaveAsPrefabAsset(prefabBasis[i], "Assets/NewExampleGridDataPrefabs/" + prefabBasis[i].name + ".prefab"));
                     if (newPrefabs[newPrefabs.Count - 1].TryGetComponent<TileComponent>(out TileComponent newTileComponent))
                     {
                         newTileComponent.TileData = tileDatas[i];
-                        PrefabUtility.SavePrefabAsset(newPrefabs[i]);
+                        newPrefabs[i * 4].transform.rotation = Quaternion.Euler(0, 0, 0);
+                        PrefabUtility.SavePrefabAsset(newPrefabs[i * 4]);
+
                         // Create 3 additional prototypes
                         TileComponent[] newPrefabComponents = CreatePrototypes(newTileComponent);
                         for (int j = 0; j < newPrefabComponents.Length; ++j)
@@ -216,7 +217,6 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                         {
                             tileDatas.Add(new TileData(currentTile.TileData));
                             prefabBasisObjects.Add(currentTile.gameObject);
-                            prefabBasisObjects[prefabBasisObjects.Count - 1].transform.rotation = Quaternion.identity;
                             // Create the new list of arrays for frequency for each y position and add one to the current y position
                             currentTileFequencyForEachYPosition.Add(new int[gridDimensions.y]);
                             ++currentTileFequencyForEachYPosition[currentTileFequencyForEachYPosition.Count - 1][y];
@@ -385,6 +385,10 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         if (!validNeighbourList.Contains(opposingID))
         {
             validNeighbourList.Add(opposingID);
+            if (opposingID == 24)
+            {
+                Debug.Log("Adding The Snow stuff");
+            }
             if (SideBeingAddedToo != socketDirection)
             {
                 if (opposingID != -1)

@@ -14,6 +14,15 @@ Making the weight be effected by biome
 	making keyframe to define what the the spawning should look like
 	Added some snow tiles
 	Then I broke everything
+	fixed issue with tile rotation
+	tiles worked without keyframe thing
+	Manully added the off side sockets to grass for testing
+	fixing issue with title unassigning own weights
+	Made new example]
+	weights could go above the array for y weightings
+	Manully added the off side sockets to grass for testing is presenting an issue
+	did fix isssue with unassigning own weights, was iterating incorrectly over the new prefabs beacuse of the new prototypes
+	Still had to manually as some sockets to grass but it is now working
 	
 1-2
 Grass 100%

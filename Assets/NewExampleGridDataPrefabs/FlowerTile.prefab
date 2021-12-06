@@ -25,7 +25,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737603331932742812}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -60,8 +60,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileData:
     id: 12
-    baseTileWeights: []
-    tileSocketData: {fileID: 11400000, guid: e773cf698a7ab4f4694df2961789a06a, type: 2}
+    baseTileWeights:
+    - 0
+    - 0.060000002
+    - 0
+    - 0
+    - 0
+    tileSocketData: {fileID: 11400000, guid: 8125ac0e0cd422548967140a881735bf, type: 2}
     tileType: 8
     biomeType: 0
 --- !u!1 &7375567779213755371

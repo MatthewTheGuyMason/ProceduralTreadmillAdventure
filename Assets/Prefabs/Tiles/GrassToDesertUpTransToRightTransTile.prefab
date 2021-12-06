@@ -60,9 +60,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileData:
     id: 9
-    baseTileWeight: 0
+    baseTileWeights: []
     tileSocketData: {fileID: 11400000, guid: 55ab0e41d8193424c94d0ebf0b491777, type: 2}
     tileType: 2
+    biomeType: 1
 --- !u!1 &7322306642571409835
 GameObject:
   m_ObjectHideFlags: 0

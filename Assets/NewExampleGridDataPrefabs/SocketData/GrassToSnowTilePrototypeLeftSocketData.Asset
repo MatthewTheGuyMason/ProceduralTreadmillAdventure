@@ -16,7 +16,7 @@ MonoBehaviour:
   validNeighbours:
     aboveNeighbours: 00000000
     belowNeighbours: ffffffff
-    frontNeighbours: 0100000018000000
-    rightNeighbours: 1b0000001a000000
-    backNeighbours: 1800000001000000
-    leftNeighbours: ffffffff1b000000
+    frontNeighbours: 18000000
+    rightNeighbours: ffffffff1a0000001e000000
+    backNeighbours: 01000000
+    leftNeighbours: 1b0000001d000000ffffffff
