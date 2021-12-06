@@ -49,6 +49,8 @@ public class TileGrid : MonoBehaviour
     [SerializeField]
     private TileComponent defaultTile;
 
+    private Stack<Vector3Int> possibilitySpaceLocationsToUpdate;
+
 #if UNITY_EDITOR
     [SerializeField]
     private bool showGrid;
@@ -69,6 +71,7 @@ public class TileGrid : MonoBehaviour
         //    }
 
         //}
+        possibilitySpaceLocationsToUpdate = new Stack<Vector3Int>();
 
         tileGrid = new TileComponent[gridDimensions.x][][];
         for (int x = 0; x < gridDimensions.x; ++x)
@@ -469,7 +472,6 @@ public class TileGrid : MonoBehaviour
     /// </summary>
     private void UpdateEntireProbalitySpace()
     {
-        bool samePossibilities = true;
         for (int x = 0; x < gridDimensions.x; ++x)
         {
             for (int y = 0; y < gridDimensions.y; ++y)
@@ -490,14 +492,14 @@ public class TileGrid : MonoBehaviour
                     {
                         if (!possibilitySpace[x][y][z].Contains(previousPossibilites[i]))
                         {
-                            samePossibilities = false;
                             samePossibilitesForThisSpace = false;
                             break;
                         }
                     }
-                    if (showPossibillitySpace)
+                    if (!samePossibilitesForThisSpace)
                     {
-                        if (!samePossibilitesForThisSpace)
+                        AddAllNeighboursToPropergationStack(new Vector3Int(x, y, z));
+                        if (showPossibillitySpace)
                         {
                             for (int j = 0; j < possibilitySpaceObjects[x][y][z].Length; ++j)
                             {
@@ -509,19 +511,75 @@ public class TileGrid : MonoBehaviour
                 }
             }
         }
-        if (!samePossibilities)
+    }
+
+    private void UpdatePossibilitySpaceFromPropergation()
+    {
+        int tilesAssesedCount = 0;
+        while (possibilitySpaceLocationsToUpdate.Count > 0)
         {
-            //UpdateEntireProbalitySpace();
+            if (tilesAssesedCount > gridDimensions.x * gridDimensions.y * gridDimensions.z * 100)
+            {
+                Debug.Log("prorogation looped too many times! Breaking...");
+                break;
+            }
+            Vector3Int coordAssesed = possibilitySpaceLocationsToUpdate.Pop();
+            if (CheckIfCoordIsInGrid(coordAssesed))
+            {
+                List<TileComponent> previousPossibilites = new List<TileComponent>(possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z]);
+                possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z] = GetPossibilitySpaceForSingleTile(coordAssesed.x, coordAssesed.y, coordAssesed.z);
+
+                if (possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Count == 0)
+                {
+                    Debug.LogError("Possibility space was empty for tile at grid position:" + new Vector3Int(coordAssesed.x, coordAssesed.y, coordAssesed.z).ToString());
+                    //BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(x);
+                    //Debug.Log(weights.desertUnitInterval + " " + weights.grasslandUnitInterval + " " + weights.tundraUnitInterval);
+                }
+
+                bool samePossibilitesForThisSpace = true;
+                for (int i = 0; i < previousPossibilites.Count; ++i)
+                {
+                    if (!possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Contains(previousPossibilites[i]))
+                    {
+                        samePossibilitesForThisSpace = false;
+                        break;
+                    }
+                }
+                if (!samePossibilitesForThisSpace)
+                {
+                    AddAllNeighboursToPropergationStack(coordAssesed);
+                    if (showPossibillitySpace)
+                    {
+                        for (int j = 0; j < possibilitySpaceObjects[coordAssesed.x][coordAssesed.y][coordAssesed.z].Length; ++j)
+                        {
+                            GameObject.Destroy(possibilitySpaceObjects[coordAssesed.x][coordAssesed.y][coordAssesed.z][j]);
+                        }
+                        possibilitySpaceObjects[coordAssesed.x][coordAssesed.y][coordAssesed.z] = AddProabilitySpaceObjects(possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z], new Vector3Int(coordAssesed.x, coordAssesed.y, coordAssesed.z));
+                    }
+                }
+            }
+
+            ++tilesAssesedCount;
         }
     }
 
     private IEnumerator PlacementInteration()
     {
-        UpdateEntireProbalitySpace();
+        for (int x = 0; x < gridDimensions.x; ++x)
+        {
+            for (int y = 0; y < gridDimensions.y; ++y)
+            {
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    possibilitySpaceLocationsToUpdate.Push(new Vector3Int(x, y, z));
+                }
+            }
+        }
+        //UpdateEntireProbalitySpace();
 
         for (int i = 0; i < gridDimensions.x * gridDimensions.y * gridDimensions.z; ++i)
         {
-            UpdateEntireProbalitySpace();
+            UpdatePossibilitySpaceFromPropergation();
 
             // Find the lowest entropy value
             float lowestEntropyValue = float.MaxValue;
@@ -584,6 +642,7 @@ public class TileGrid : MonoBehaviour
                 tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
                 GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
                 lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
+                AddAllNeighboursToPropergationStack(lowestEntropyTilesCoords);
             }
             else
             {
@@ -812,6 +871,40 @@ public class TileGrid : MonoBehaviour
         //}
 
         //return baseWeight * (Mathf.Clamp01(1f - distanceToIdeal));
+    }
+
+    private bool CheckIfCoordIsInGrid(Vector3Int coordinate)
+    {
+        if (coordinate.x > -1)
+        {
+            if (coordinate.x < gridDimensions.x)
+            {
+                if (coordinate.y > -1)
+                {
+                    if (coordinate.y < gridDimensions.y)
+                    {
+                        if (coordinate.z > -1)
+                        {
+                            if (coordinate.z < gridDimensions.z)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void AddAllNeighboursToPropergationStack(Vector3Int coordinate)
+    {
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x + 1, coordinate .y,      coordinate.z));
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x - 1, coordinate .y,      coordinate.z));
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x,     coordinate .y + 1,  coordinate.z));
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x,     coordinate .y - 1,  coordinate.z));
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x,     coordinate .y,      coordinate.z + 1));
+        possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x,     coordinate .y,      coordinate.z - 1));
     }
 
     //private void BuildTileSetProtoTypes()
