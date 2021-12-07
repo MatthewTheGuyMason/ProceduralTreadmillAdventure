@@ -102,7 +102,7 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                     }
                 }
 
-                ExampleGridData exampleGridData = ExampleGridData.CreateInstance<ExampleGridData>();
+                TileSet exampleGridData = TileSet.CreateInstance<TileSet>();
                 exampleGridData.tilePrefabs = new List<TileComponent>();
                 for (int i = 0; i < newPrefabs.Count; ++i)
                 {

@@ -27,6 +27,11 @@ Propergation
 	Added all items into a stack
 	forgot to make 0 count as inside the grid
 	now runs far faster
+Treadmilliing
+	
+	
+	
+	
 	
 1-2
 Grass 100%
