@@ -28,11 +28,15 @@ Propergation
 	forgot to make 0 count as inside the grid
 	now runs far faster
 Treadmilliing
-	
-	
-	
-	
-	
+	But first some cleaning
+	then dropping some tiles off the back
+	Shifting adropping works just as video shows
+	issue with end tiles not nulling
+	Made basic tread mill that eventually breaks
+	Now having to make the x sides not matter
+	Very simple version mostly works, moving on to "planning" system
+	New system works by pushing back the tiles being planned utill all the planned tiles are used up, then making them the planned tiles
+	Treadmills untill desrt then breaks, time to look into when the weights change
 1-2
 Grass 100%
 100 Tiles

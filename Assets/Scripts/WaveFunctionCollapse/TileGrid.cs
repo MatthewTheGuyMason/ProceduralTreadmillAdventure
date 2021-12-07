@@ -46,6 +46,10 @@ public class TileGrid : MonoBehaviour
     /// </summary>
     private GameObject[][][][] possibilitySpaceVisualiserObjects;
 
+    private int xOffset;
+    private int expectedPlannedTiles;
+    private int numberOfTilesPlanned;
+
     /// <summary>
     /// A stack of all the coordinates in the possibility space that need to be updated
     /// </summary>
@@ -55,6 +59,18 @@ public class TileGrid : MonoBehaviour
     /// All the tiles that could possibility exist in each grid coordinate
     /// </summary>
     private List<TileComponent>[][][] possibilitySpace;
+
+    /// <summary>
+    /// The start of the tiles that have been planned
+    /// </summary>
+    private int plannedTilesStartX;
+
+    /// <summary>
+    /// The start of the tiles that are currently being planed
+    /// </summary>
+    private int tilesBeingPlannedStartX;
+
+    private int tilesBeingPlannedEndX;
 
     /// <summary>
     /// The tiles that have been placed down in the grid
@@ -85,6 +101,18 @@ public class TileGrid : MonoBehaviour
 
     private void Start()
     {
+        // Make the grid x a multiple of 3
+        gridDimensions.x += 3 - gridDimensions.x % 3;
+
+
+        int thirdOfXDimension = (gridDimensions.x / 3);
+        // One third of the grid is being planned space
+        expectedPlannedTiles = thirdOfXDimension * gridDimensions.y * gridDimensions.z;
+        tilesBeingPlannedStartX = gridDimensions.x - thirdOfXDimension;
+        tilesBeingPlannedEndX = gridDimensions.x;
+        // The next third of the grid is planned space (the last third is visible space but no assigning is necessary)
+        plannedTilesStartX = tilesBeingPlannedStartX - thirdOfXDimension;
+
         // Create propagation stack
         possibilitySpaceLocationsToUpdate = new Stack<Vector3Int>();
 
@@ -133,10 +161,25 @@ public class TileGrid : MonoBehaviour
             }
         }
 
+
+
         // Start generation
         progressSlider.maxValue = gridDimensions.x * gridDimensions.y * gridDimensions.z;
         progressSlider.value = 0f;
-        StartCoroutine(PlacementInterations());
+        // Set up visible space
+        PlacementInterations(Vector3Int.zero, new Vector3Int(plannedTilesStartX, gridDimensions.y, gridDimensions.z));
+        // Set up planned tiles (And the to be planned tiles will just be possibility space anyway which is what we want)
+        SetUpPlannedTiles();
+        StartCoroutine(ForwardsStep());
+    }
+
+    private void Update()
+    {
+        // Always build up the planned tiles if not completed 
+        if (numberOfTilesPlanned != expectedPlannedTiles)
+        {
+            PlanTile();
+        }
     }
     #endregion
 
@@ -190,11 +233,11 @@ public class TileGrid : MonoBehaviour
     /// <returns>the weight of a given tile adjusted for its position in the grid</returns>
     private float GetWeightOfTileAdjustedForPosition(TileComponent tileComponent, int xPosition, int yPosition)
     {
-        //return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
+        return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float baseWeight = tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float transitionWeight;
         // Get the current weights from the transitional data
-        BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition * 2);
+        BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition + xOffset);
         switch (tileComponent.TileData.TileBiomeType)
         {
             case TileData.BiomeType.Desert:
@@ -294,6 +337,89 @@ public class TileGrid : MonoBehaviour
         return newGameObjects;
     }
 
+    /// <summary>
+    /// Loops over the entire grid and places all the tiles using wave function collapse
+    /// </summary>
+    /// <returns></returns>
+    private void PlacementInterations(Vector3Int areaStartPosition, Vector3Int areaEndPosition)
+    {
+        // Add every tiles to be updated
+        for (int x = areaStartPosition.x; x < areaEndPosition.x; ++x)
+        {
+            for (int y = areaStartPosition.y; y < areaEndPosition.y; ++y)
+            {
+                for (int z = areaStartPosition.z; z < areaEndPosition.z; ++z)
+                {
+                    possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
+                    possibilitySpaceLocationsToUpdate.Push(new Vector3Int(x, y, z));
+                }
+            }
+        }
+
+        int numberOfTiles = (areaEndPosition.x - areaStartPosition.x) * (areaEndPosition.y - areaStartPosition.y) * (areaEndPosition.z - areaStartPosition.z);
+
+        for (int i = 0; i < numberOfTiles; ++i)
+        {
+            // Update all the tiles necessary
+            UpdatePossibilitySpaceFromPropergation();
+
+            // Find the lowest entropy value tile
+            float lowestEntropyValue = float.MaxValue;
+            Vector3Int lowestEntropyTilesCoords = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+            int count = 0;
+            for (int x = areaStartPosition.x; x < areaEndPosition.x; ++x)
+            {
+                for (int y = areaStartPosition.y; y < areaEndPosition.y; ++y)
+                {
+                    for (int z = areaStartPosition.z; z < areaEndPosition.z; ++z)
+                    {
+                        if (tileGrid[x][y][z] == null)
+                        {
+                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z], y, x);
+                            ++count;
+                            if (float.IsNaN(entropy))
+                            {
+                                Debug.LogError("Entropy gave NaN result");
+                            }
+                            if (entropy < lowestEntropyValue)
+                            {
+                                lowestEntropyValue = entropy;
+                                lowestEntropyTilesCoords = new Vector3Int(x, y, z);
+                            }
+                        }
+                    }
+                }
+            }
+            if (count == 0)
+            {
+                Debug.Log("Zero entropies calculated for iteration: " + i);
+            }
+
+            // Select tile from its possibilities as the tile to be placed
+            TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            ++progressSlider.value;
+            if (newTileComponent != null)
+            {
+                // Instantiate the tile
+                tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
+                GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
+                lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
+                // Add its neighbors to be updated
+                AddAllNeighboursToPropergationStack(lowestEntropyTilesCoords);
+            }
+            else
+            {
+                Debug.LogError("Generation failed");
+                ResetGenAttempt();
+            }
+            // Wait the required time
+            //yield return null;
+        }
+        //xOffset += 2;
+        //StartCoroutine(GenerateMoreTiles(2));
+
+        //yield break;
+    }
     /// <summary>
     /// Loops over the entire grid and places all the tiles using wave function collapse
     /// </summary>
@@ -502,10 +628,42 @@ public class TileGrid : MonoBehaviour
         }
         else
         {
-            returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.validNeighbours.GetValidNeighbourListForSide(sideChecked).Contains(-1));
+            // X side should not matter to allow for treadmill effect
+            if (offSetIndexChecked != 0)
+            {
+                returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.validNeighbours.GetValidNeighbourListForSide(sideChecked).Contains(-1));
+            }
+
         }
 
         return returnedTiles;
+    }
+    private List<TileComponent> ShiftTileAroundGrid(Vector3Int shiftVector)
+    {
+        List<TileComponent> tilesOutOfGrid = new List<TileComponent>();
+        for (int x = 0; x < gridDimensions.x; ++x)
+        {
+            for (int y = 0; y < gridDimensions.y; ++y)
+            {
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    if (CheckIfCoordIsInGrid(new Vector3Int(x, y, z) + shiftVector))
+                    {
+                        if (tileGrid[x][y][z] != null)
+                        {
+                            tileGrid[x][y][z].transform.position += shiftVector;
+                        }
+                        tileGrid[x + shiftVector.x][y + shiftVector.y][z + shiftVector.z] = tileGrid[x][y][z];
+                        tileGrid[x][y][z] = null;
+                    }
+                    else
+                    {
+                        tilesOutOfGrid.Add(tileGrid[x][y][z]);
+                    }
+                }
+            }
+        }
+        return tilesOutOfGrid;
     }
 
     /// <summary>
@@ -587,6 +745,39 @@ public class TileGrid : MonoBehaviour
         possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x, coordinate.y, coordinate.z + 1));
         possibilitySpaceLocationsToUpdate.Push(new Vector3Int(coordinate.x, coordinate.y, coordinate.z - 1));
     }
+    /// <summary>
+    /// Drop the tiles off the end of the grid
+    /// </summary>
+    private void DropEndTiles()
+    {
+        for (int y = 0; y < gridDimensions.y; ++y)
+        {
+            for (int z = 0; z < gridDimensions.z; ++z)
+            {
+                if (tileGrid[0][y][z] != null)
+                {
+                    tileGrid[0][y][z].gameObject.AddComponent<Rigidbody>();
+                    tileGrid[0][y][z] = null;
+                }
+            }
+        }
+    }
+    private void DropTiles(List<TileComponent> tilesToDrop)
+    {
+        for (int i = 0; i < tilesToDrop.Count; ++i)
+        {
+            tilesToDrop[i].gameObject.AddComponent<Rigidbody>();
+        }
+    }
+    //private IEnumerator GenerateMoreTiles(int numberOfColumnsToGenerate)
+    //{
+    //    List<TileComponent> droppedTiles = ShiftTileAroundGrid(Vector3Int.left * numberOfColumnsToGenerate);
+    //    DropTiles(droppedTiles);
+    //    StartCoroutine(PlacementInterations(new Vector3Int(gridDimensions.x - numberOfColumnsToGenerate, 0, 0), gridDimensions));
+    //    yield break;
+    //}
+
+
     /// <summary>
     /// Resets the generation attempt so that the generation can start over
     /// </summary>
@@ -677,7 +868,6 @@ public class TileGrid : MonoBehaviour
     /// </summary>
     private void UpdatePossibilitySpaceFromPropergation()
     {
-
         int tilesAssesedCount = 0; // This counted is just to prevent an endless loop
         while (possibilitySpaceLocationsToUpdate.Count > 0)
         {
@@ -702,14 +892,22 @@ public class TileGrid : MonoBehaviour
 
                 // Check if it changed add its neighbors to the stack if it has
                 bool samePossibilitesForThisSpace = true;
-                for (int i = 0; i < previousPossibilites.Count; ++i)
+                if (previousPossibilites.Count != possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Count)
                 {
-                    if (!possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Contains(previousPossibilites[i]))
+                    samePossibilitesForThisSpace = false;
+                }
+                else
+                {
+                    for (int i = 0; i < previousPossibilites.Count; ++i)
                     {
-                        samePossibilitesForThisSpace = false;
-                        break;
+                        if (!possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Contains(previousPossibilites[i]))
+                        {
+                            samePossibilitesForThisSpace = false;
+                            break;
+                        }
                     }
                 }
+
                 if (!samePossibilitesForThisSpace)
                 {
                     AddAllNeighboursToPropergationStack(coordAssesed);
@@ -726,6 +924,200 @@ public class TileGrid : MonoBehaviour
 
             ++tilesAssesedCount;
         }
+    }
+
+    private void PlanTile()
+    {
+        //// Add every tiles to be updated
+        //for (int x = areaStartPosition.x; x < areaEndPosition.x; ++x)
+        //{
+        //    for (int y = areaStartPosition.y; y < areaEndPosition.y; ++y)
+        //    {
+        //        for (int z = areaStartPosition.z; z < areaEndPosition.z; ++z)
+        //        {
+        //            possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
+        //            possibilitySpaceLocationsToUpdate.Push(new Vector3Int(x, y, z));
+        //        }
+        //    }
+        //}
+
+        //int numberOfTiles = (areaEndPosition.x - areaStartPosition.x) * (areaEndPosition.y - areaStartPosition.y) * (areaEndPosition.z - areaStartPosition.z);
+
+        //for (int i = 0; i < numberOfTiles; ++i)
+        //{
+            // Update all the tiles necessary
+            UpdatePossibilitySpaceFromPropergation();
+
+            // Find the lowest entropy value tile
+            float lowestEntropyValue = float.MaxValue;
+            Vector3Int lowestEntropyTilesCoords = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+            int count = 0;
+            for (int x = tilesBeingPlannedStartX; x < tilesBeingPlannedEndX; ++x)
+            {
+                for (int y = 0; y < gridDimensions.y; ++y)
+                {
+                    for (int z = 0; z < gridDimensions.z; ++z)
+                    {
+                        if (tileGrid[x][y][z] == null)
+                        {
+                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z], y, x);
+                            ++count;
+                            if (float.IsNaN(entropy))
+                            {
+                                Debug.LogError("Entropy gave NaN result");
+                            }
+                            if (entropy < lowestEntropyValue)
+                            {
+                                lowestEntropyValue = entropy;
+                                lowestEntropyTilesCoords = new Vector3Int(x, y, z);
+                            }
+                        }
+                    }
+                }
+            }
+            if (count == 0)
+            {
+                Debug.Log("Zero entropies calculated for iteration: ");
+            }
+
+            // Select tile from its possibilities as the tile to be placed
+            TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            ++progressSlider.value;
+            if (newTileComponent != null)
+            {
+            // Set the tile ready for instantiation later
+            tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = newTileComponent;
+                // Instantiate the tile
+                //tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] =
+                //GameObject.Instantiate(newTileComponent.gameObject, new Vector3(lowestEntropyTilesCoords.x,
+                //lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
+                // Add its neighbors to be updated
+                AddAllNeighboursToPropergationStack(lowestEntropyTilesCoords);
+            }
+            else
+            {
+                Debug.LogError("Generation failed");
+                ResetGenAttempt();
+            }
+        // Wait the required time
+        //yield return new WaitForSeconds(timeBetweenPlacements);
+        //}
+        ++numberOfTilesPlanned; 
+        //xOffset += 2;
+        //StartCoroutine(GenerateMoreTiles(2));
+    }
+
+    private void SetUpPlannedTiles()
+    {
+        //// Add every tiles to be updated
+        for (int x = plannedTilesStartX; x < tilesBeingPlannedStartX; ++x)
+        {
+            for (int y = gridDimensions.y; y < gridDimensions.y; ++y)
+            {
+                for (int z = gridDimensions.z; z < gridDimensions.z; ++z)
+                {
+                    possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
+                    possibilitySpaceLocationsToUpdate.Push(new Vector3Int(x, y, z));
+                }
+            }
+        }
+
+        int numberOfTiles = (tilesBeingPlannedStartX - plannedTilesStartX) * gridDimensions.y * gridDimensions.z;
+
+        for (int i = 0; i < numberOfTiles; ++i)
+        {
+            // Update all the tiles necessary
+            UpdatePossibilitySpaceFromPropergation();
+
+            // Find the lowest entropy value tile
+            float lowestEntropyValue = float.MaxValue;
+            Vector3Int lowestEntropyTilesCoords = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+            int count = 0;
+            for (int x = plannedTilesStartX; x < tilesBeingPlannedStartX; ++x)
+            {
+                for (int y = 0; y < gridDimensions.y; ++y)
+                {
+                    for (int z = 0; z < gridDimensions.z; ++z)
+                    {
+                        if (tileGrid[x][y][z] == null)
+                        {
+                            float entropy = GetShannonEntropyOfPossibilitySpace(possibilitySpace[x][y][z], y, x);
+                            ++count;
+                            if (float.IsNaN(entropy))
+                            {
+                                Debug.LogError("Entropy gave NaN result");
+                            }
+                            if (entropy < lowestEntropyValue)
+                            {
+                                lowestEntropyValue = entropy;
+                                lowestEntropyTilesCoords = new Vector3Int(x, y, z);
+                            }
+                        }
+                    }
+                }
+            }
+            if (count == 0)
+            {
+                Debug.Log("Zero entropies calculated for iteration: ");
+            }
+
+            // Select tile from its possibilities as the tile to be placed
+            TileComponent newTileComponent = GetRandomTileFromProababilitySpace(lowestEntropyTilesCoords.x, lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z);
+            ++progressSlider.value;
+            if (newTileComponent != null)
+            {
+                // Set the tile ready for instantiation later
+                tileGrid[lowestEntropyTilesCoords.x][lowestEntropyTilesCoords.y][lowestEntropyTilesCoords.z] = newTileComponent;
+                // Add its neighbors to be updated
+                AddAllNeighboursToPropergationStack(lowestEntropyTilesCoords);
+            }
+            else
+            {
+                Debug.LogError("Generation failed");
+                ResetGenAttempt();
+            }
+        }
+    }
+
+    private IEnumerator ForwardsStep()
+    {
+        // Instantiate the new line of tiles
+        for (int y = 0; y < gridDimensions.y; ++y)
+        {
+            for (int z = 0; z < gridDimensions.z; ++z)
+            {
+                tileGrid[plannedTilesStartX][y][z] =
+                GameObject.Instantiate(tileGrid[plannedTilesStartX][y][z].gameObject, new Vector3(plannedTilesStartX,
+                y, z), tileGrid[plannedTilesStartX][y][z].gameObject.transform.rotation, transform).GetComponent<TileComponent>();
+            }
+        }
+        // Push all tiles back;
+        List<TileComponent> droppedTiles = ShiftTileAroundGrid(Vector3Int.left);
+        DropTiles(droppedTiles);
+
+        ++xOffset;
+        // push the start and end of tiles to plan back
+        --tilesBeingPlannedStartX;
+        --tilesBeingPlannedEndX;
+
+        // Check if there are no more planned tiles
+        if (tilesBeingPlannedStartX == plannedTilesStartX)
+        {
+            if (expectedPlannedTiles != numberOfTilesPlanned)
+            {
+                yield return new WaitUntil(CheckPlanningComplete);
+            }
+            tilesBeingPlannedStartX = gridDimensions.x - gridDimensions.x / 3;
+            tilesBeingPlannedEndX = gridDimensions.x;
+            numberOfTilesPlanned = 0;
+        }
+        yield return new WaitForSeconds(0.5f);
+        StartCoroutine(ForwardsStep());
+    }
+
+    private bool CheckPlanningComplete()
+    {
+        return expectedPlannedTiles == numberOfTilesPlanned;
     }
     #endregion
 }
