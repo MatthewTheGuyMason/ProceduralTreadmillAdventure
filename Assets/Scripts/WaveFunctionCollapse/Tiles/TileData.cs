@@ -151,6 +151,7 @@ public class TileData
         {
             Debug.Log("HERE!");
         }
+
         return Mathf.Lerp(baseTileWeights[lowerIndex], baseTileWeights[upperIndex], leftOverDecimal); // return the weight lerp between the 2 closet values using the demical
     }
     #endregion

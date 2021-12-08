@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
   m_Name: SnowFloorSocketDataBasis
   m_EditorClassIdentifier: 
-  sideSocketIds: 17000000ffffffff18000000180000001800000018000000
+  sideSocketIds: 170000002800000018000000180000001800000018000000
   validNeighbours:
     aboveNeighbours: 
     belowNeighbours: 

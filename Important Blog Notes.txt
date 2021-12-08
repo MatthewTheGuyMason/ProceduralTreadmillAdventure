@@ -37,6 +37,13 @@ Treadmilliing
 	Very simple version mostly works, moving on to "planning" system
 	New system works by pushing back the tiles being planned utill all the planned tiles are used up, then making them the planned tiles
 	Treadmills untill desrt then breaks, time to look into when the weights change
+	Need to clear possiblity space, attcully give it all possibilites
+	this makes it work but lags hard every time it moves back
+	A slight optimsiation to make the stack not duplicate items
+	now working quite well, somtimes half fails but then success as the project ontinues
+	Seems like it would be more efficent to generate whole thing in a loading screen then move onto the next level (see unrailed for example)
+	Fixed the main issues I was having but now it lags when moving forwards
+Adding hills
 1-2
 Grass 100%
 100 Tiles

@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472310589f2460843901b74fdc86ac38, type: 3}
   m_Name: SnowTile(Clone)PrototypeLeftSocketData
   m_EditorClassIdentifier: 
-  sideSocketIds: 17000000ffffffff18000000180000001800000018000000
+  sideSocketIds: 170000002800000018000000180000001800000018000000
   validNeighbours:
-    aboveNeighbours: 00000000
-    belowNeighbours: ffffffff
-    frontNeighbours: 18000000
-    rightNeighbours: 18000000ffffffff
+    aboveNeighbours: 000000002300000028000000
+    belowNeighbours: ffffffff17000000
+    frontNeighbours: 1800000027000000
+    rightNeighbours: 18000000ffffffff27000000
     backNeighbours: 18000000ffffffff
-    leftNeighbours: ffffffff18000000
+    leftNeighbours: ffffffff1800000027000000

@@ -25,13 +25,13 @@ MonoBehaviour:
     numberOfTilesTileNextKeyframe: 10
   - biomeWeights:
       grasslandUnitInterval: 0
-      desertUnitInterval: 1
-      tundraUnitInterval: 0
+      desertUnitInterval: 0
+      tundraUnitInterval: 1
     numberOfTilesTileNextKeyframe: 100
   - biomeWeights:
       grasslandUnitInterval: 0
-      desertUnitInterval: 1
-      tundraUnitInterval: 0
+      desertUnitInterval: 0
+      tundraUnitInterval: 1
     numberOfTilesTileNextKeyframe: 10
   - biomeWeights:
       grasslandUnitInterval: 1
@@ -45,11 +45,11 @@ MonoBehaviour:
     numberOfTilesTileNextKeyframe: 10
   - biomeWeights:
       grasslandUnitInterval: 0
-      desertUnitInterval: 0
-      tundraUnitInterval: 1
+      desertUnitInterval: 1
+      tundraUnitInterval: 0
     numberOfTilesTileNextKeyframe: 100
   - biomeWeights:
       grasslandUnitInterval: 0
-      desertUnitInterval: 0
-      tundraUnitInterval: 1
+      desertUnitInterval: 1
+      tundraUnitInterval: 0
     numberOfTilesTileNextKeyframe: 10
