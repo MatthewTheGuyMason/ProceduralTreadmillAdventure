@@ -43,6 +43,11 @@ Treadmilliing
 	now working quite well, somtimes half fails but then success as the project ontinues
 	Seems like it would be more efficent to generate whole thing in a loading screen then move onto the next level (see unrailed for example)
 	Fixed the main issues I was having but now it lags when moving forwards
+	Messed around with lighting for fog effect
+	also made tiles drop a little less agrssivly
+	numerus bug fixes
+	now not enough tiles are planned
+	somtimes chrashes in unity
 Adding hills
 1-2
 Grass 100%
