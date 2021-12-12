@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &273943700
+--- !u!1 &5774886112319563837
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 273943701}
-  - component: {fileID: 273943703}
-  - component: {fileID: 273943702}
+  - component: {fileID: 5774886112319563824}
+  - component: {fileID: 5774886112319563827}
+  - component: {fileID: 5803831106353632592}
   m_Layer: 0
   m_Name: GrassToSnowGrassCornerTile
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &273943701
+--- !u!4 &5774886112319563824
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 273943700}
+  m_GameObject: {fileID: 5774886112319563837}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 34, y: 0, z: 3}
+  m_LocalPosition: {x: 34, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 642448227}
+  - {fileID: 3397934150042072472}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!65 &273943703
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!65 &5774886112319563827
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 273943700}
+  m_GameObject: {fileID: 5774886112319563837}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &273943702
+--- !u!114 &5803831106353632592
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 273943700}
+  m_GameObject: {fileID: 5774886112319563837}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -61,7 +61,7 @@ MonoBehaviour:
   tileData:
     id: 15
     baseTileWeights:
-    - 0.013333334
+    - 0.026666667
     - 0
     - 0
     - 0
@@ -69,7 +69,7 @@ MonoBehaviour:
     tileSocketData: {fileID: 11400000, guid: 4842160ae233ab345a30fec7fcf76bda, type: 2}
     tileType: 2
     biomeType: -1
---- !u!1 &642448226
+--- !u!1 &5877703724380661411
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,9 +77,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 642448227}
-  - component: {fileID: 642448229}
-  - component: {fileID: 642448228}
+  - component: {fileID: 3397934150042072472}
+  - component: {fileID: 572181759673699538}
+  - component: {fileID: 3951194430474299462}
   m_Layer: 0
   m_Name: GrassToSnowGrassCornerTileModel
   m_TagString: Untagged
@@ -87,35 +87,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &642448227
+--- !u!4 &3397934150042072472
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 642448226}
+  m_GameObject: {fileID: 5877703724380661411}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 273943701}
+  m_Father: {fileID: 5774886112319563824}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &642448229
+--- !u!33 &572181759673699538
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 642448226}
+  m_GameObject: {fileID: 5877703724380661411}
   m_Mesh: {fileID: -2432090755550338912, guid: f69764db9b9dbb748966c30bf8391974, type: 3}
---- !u!23 &642448228
+--- !u!23 &3951194430474299462
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 642448226}
+  m_GameObject: {fileID: 5877703724380661411}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
