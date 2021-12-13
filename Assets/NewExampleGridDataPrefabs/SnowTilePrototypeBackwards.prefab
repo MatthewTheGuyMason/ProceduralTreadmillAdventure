@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1188835108771653177
+--- !u!1 &5810394728018137182
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7153316655475201132}
-  - component: {fileID: 5428695689643837322}
-  - component: {fileID: 5808810815738198946}
+  - component: {fileID: 660404678307781019}
+  - component: {fileID: 1671965321237033217}
+  - component: {fileID: 3547808352257726747}
   m_Layer: 0
   m_Name: SnowTileModel
   m_TagString: Untagged
@@ -18,35 +18,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7153316655475201132
+--- !u!4 &660404678307781019
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1188835108771653177}
+  m_GameObject: {fileID: 5810394728018137182}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 804699967949373609}
+  m_Father: {fileID: 4262340452824143775}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5428695689643837322
+--- !u!33 &1671965321237033217
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1188835108771653177}
+  m_GameObject: {fileID: 5810394728018137182}
   m_Mesh: {fileID: -2432090755550338912, guid: e8955eb2188a53a4eaf1a5bd866ad6d8, type: 3}
---- !u!23 &5808810815738198946
+--- !u!23 &3547808352257726747
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1188835108771653177}
+  m_GameObject: {fileID: 5810394728018137182}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -82,7 +82,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &7567873886945352036
+--- !u!1 &6063618438121931122
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,9 +90,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 804699967949373609}
-  - component: {fileID: 2761055993983372891}
-  - component: {fileID: 7192908089621705303}
+  - component: {fileID: 4262340452824143775}
+  - component: {fileID: 9005757756606964171}
+  - component: {fileID: 246676140137382393}
   m_Layer: 0
   m_Name: SnowTilePrototypeBackwards
   m_TagString: Untagged
@@ -100,41 +100,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &804699967949373609
+--- !u!4 &4262340452824143775
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7567873886945352036}
+  m_GameObject: {fileID: 6063618438121931122}
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 34, y: 0, z: 4}
+  m_LocalPosition: {x: 94, y: 0, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 7153316655475201132}
+  - {fileID: 660404678307781019}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2761055993983372891
+--- !u!65 &9005757756606964171
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7567873886945352036}
+  m_GameObject: {fileID: 6063618438121931122}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7192908089621705303
+--- !u!114 &246676140137382393
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7567873886945352036}
+  m_GameObject: {fileID: 6063618438121931122}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -144,8 +144,8 @@ MonoBehaviour:
     id: 13
     baseTileWeights:
     - 0.026666667
-    - 0.02
-    - 0.06666667
+    - 0.006666667
+    - 0.04
     - 0
     - 0
     tileSocketData: {fileID: 11400000, guid: 1cd3ba44711f188428088247da62b548, type: 2}

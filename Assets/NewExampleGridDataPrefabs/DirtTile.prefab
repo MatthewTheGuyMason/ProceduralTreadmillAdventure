@@ -108,7 +108,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2559155492710556355}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 34, y: 0, z: 3}
+  m_LocalPosition: {x: 93, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6665491366543982438}
@@ -144,8 +144,8 @@ MonoBehaviour:
     id: 18
     baseTileWeights:
     - 0.25333333
-    - 0.14
-    - 0
+    - 0.14666668
+    - 0.02
     - 0
     - 0
     tileSocketData: {fileID: 11400000, guid: 1dc2de5e228405f4e80957bb6d283dab, type: 2}

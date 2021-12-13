@@ -15,12 +15,12 @@ using UnityEngine;
 /// </summary>
 public class TileGrid : MonoBehaviour
 {
+    /// <summary>
+    /// The number of sections the grid is split into (one for visible tiles, one for planned tiles and one for the tiles being planned)
+    /// </summary>
+    public const int numberOfSections = 3;
+
     #region Private Serialized Field
-#if UNITY_EDITOR
-    [SerializeField]
-    [Tooltip("If the grid layout should be shown")]
-    private bool showGrid;
-#endif
     [SerializeField] [Tooltip("If the tiles representing the possibility space are instantiated as the generation goes on")]
     private bool showPossibillitySpace = true;
 
@@ -29,7 +29,6 @@ public class TileGrid : MonoBehaviour
 
     [SerializeField] [Tooltip("The amount of time before it should place down a new tile ")]
     private float timeBetweenPlacements;
-
 
     [SerializeField] [Tooltip("The number of possibility spaces to check per frame from the stack, will make each frame slower but more likely to finish plan before reaching next section")]
     private int numberOfPossiblitySpacesToCheckPerFrame = 200;
@@ -48,7 +47,6 @@ public class TileGrid : MonoBehaviour
     #endregion
 
     #region Private Variables
-
     /// <summary>
     /// Used to mark out which grid spaces are in the stack possibility stack
     /// </summary>
@@ -59,11 +57,10 @@ public class TileGrid : MonoBehaviour
     /// </summary>
     private GameObject[][][][] possibilitySpaceVisualiserObjects;
 
-    private int restartCounter = 0;
-
+    /// <summary>
+    /// How many steps forward have been taken, moving the generation along the xAxis
+    /// </summary>
     private int xOffset;
-    private int expectedPlannedTiles;
-    private int numberOfTilesPlanned;
 
     /// <summary>
     /// A stack of all the coordinates in the possibility space that need to be updated
@@ -79,12 +76,13 @@ public class TileGrid : MonoBehaviour
     /// The start of the tiles that have been planned
     /// </summary>
     private int plannedTilesStartX;
-
     /// <summary>
     /// The start of the tiles that are currently being planed
     /// </summary>
     private int tilesBeingPlannedStartX;
-
+    /// <summary>
+    /// The end of the tiles that are currently being planned
+    /// </summary>
     private int tilesBeingPlannedEndX;
 
     /// <summary>
@@ -93,44 +91,10 @@ public class TileGrid : MonoBehaviour
     private TileComponent[][][] tileGrid;
     #endregion
 
-    #region Unity Method
-
+    #region Unity Methods
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        if (showGrid)
-        {
-            for (int x = 0; x < gridDimensions.x; ++x)
-            {
-                for (int y = 0; y < gridDimensions.y; ++y)
-                {
-                    for (int z = 0; z < gridDimensions.z; ++z)
-                    {
-                        Gizmos.DrawWireCube(new Vector3(x, y, z), Vector3.one);
-                    }
-                }
-            }
-        }
-
-        if (Application.isPlaying)
-        {
-            for (int x = 0; x < gridDimensions.x; ++x)
-            {
-                for (int y = 0; y < gridDimensions.y; ++y)
-                {
-                    for (int z = 0; z < gridDimensions.z; ++z)
-                    {
-                        if (tileGrid[x][y][z] == null)
-                        {
-                            //Gizmos.color = Color.black;
-                            //Gizmos.DrawSphere(new Vector3(x, y, z), 0.5f);
-                        }
-                    }
-                }
-            }
-        }
-
-
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(new Vector3(plannedTilesStartX, 0, -2f), 0.5f);
         Gizmos.color = Color.cyan;
@@ -156,23 +120,19 @@ public class TileGrid : MonoBehaviour
             }
             Gizmos.DrawSphere(new Vector3(x, 0, -3f), 0.5f);
         }
-
     }
 #endif
 
     private void Start()
     {
-        // Make the grid x a multiple of 3
-        gridDimensions.x += 3 - gridDimensions.x % 3;
-
+        // Make the grid x size is a multiple of 3
+        gridDimensions.x += numberOfSections - gridDimensions.x % numberOfSections;
 
         int thirdOfXDimension = (gridDimensions.x / 3);
         // One third of the grid is being planned space
-
         tilesBeingPlannedStartX = gridDimensions.x - thirdOfXDimension;
         tilesBeingPlannedEndX = gridDimensions.x;
-        expectedPlannedTiles = ((tilesBeingPlannedEndX - tilesBeingPlannedStartX)) * gridDimensions.y * gridDimensions.z + 25;
-        // The next third of the grid is planned space (the last third is visible space but no assigning is necessary)
+        // The next third of the grid is planned space (the last third is visible space but no variables are necessary)
         plannedTilesStartX = tilesBeingPlannedStartX - thirdOfXDimension;
 
         // Create propagation stack
@@ -200,6 +160,7 @@ public class TileGrid : MonoBehaviour
             }
         }
 
+
         // Create possibility space visualization if applicable
         if (showPossibillitySpace)
         {
@@ -217,9 +178,6 @@ public class TileGrid : MonoBehaviour
                 }
             }
         }
-
-        Debug.Log(expectedPlannedTiles);
-        Debug.Log(numberOfTilesPlanned);
 
         // Start generation
         progressSlider.maxValue = gridDimensions.x * gridDimensions.y * gridDimensions.z;
@@ -240,7 +198,11 @@ public class TileGrid : MonoBehaviour
             {
                 if (possibilitySpaceLocationsToUpdate.Count > 0)
                 {
-                    UpdateSinglePossibilitySpaceLocation();
+                    if (!UpdateSinglePossibilitySpaceLocation())
+                    {
+                        Debug.LogError("Update single possibility space has failed in update");
+                        return;
+                    }
 
                 }
                 else
@@ -469,6 +431,7 @@ public class TileGrid : MonoBehaviour
             //errorSphere.GetComponent<MeshRenderer>().material.color = Color.red;
             errorSphere.transform.position = gridPosition;
             errorSphere.name = "ERROR!";
+            errorSphere.tag = "Finish";
             newGameObjects[0] = errorSphere;
             return newGameObjects;
         }
@@ -523,8 +486,6 @@ public class TileGrid : MonoBehaviour
                 catch (System.NullReferenceException e)
                 {
                     Debug.Log(e);
-                    Debug.Log(expectedPlannedTiles);
-                    Debug.Log(numberOfTilesPlanned);
                     Debug.Break();
                 }
 
@@ -544,11 +505,9 @@ public class TileGrid : MonoBehaviour
             {
                 yield return new WaitUntil(CheckPlanningComplete);
             }
-            progressSlider.maxValue = expectedPlannedTiles;
             progressSlider.value = 0;
             tilesBeingPlannedStartX = gridDimensions.x - gridDimensions.x / 3;
             tilesBeingPlannedEndX = gridDimensions.x;
-            numberOfTilesPlanned = 0;
         }
         StartCoroutine(ForwardsStep());
     }
@@ -647,7 +606,7 @@ public class TileGrid : MonoBehaviour
         {
             if (tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z] != null)
             {
-                // Remove all tiles that does not match up with the above socket
+                // Remove all tiles that does not match up with the socket
                 returnedTiles.RemoveAll(tile => !tile.TileData.TileSocketData.CheckValidSocketConnection(tileGrid[offestGridPosition.x][offestGridPosition.y][offestGridPosition.z].TileData.TileSocketData, SocketData.GetOpposingSocket(sideChecked)));
             }
             // Remove all tiles that don't match up with the sockets of the possibilities spaces
@@ -828,7 +787,7 @@ public class TileGrid : MonoBehaviour
         }
 
         Debug.LogError("No tile able to be selected in probability space");
-        if (possibilitySpace[xPosition][yPosition][zPosition].Count < 0)
+        if (possibilitySpace[xPosition][yPosition][zPosition].Count == 0)
         {
             Debug.LogError("... Because there was no tile to select");
         }
@@ -915,9 +874,15 @@ public class TileGrid : MonoBehaviour
 
     private void ClearPossibilitySpaceVisulisation(Vector3Int coordinateToClear)
     {
-        for (int j = 0; j < possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z].Length; ++j)
+        if (possibilitySpaceVisualiserObjects != null)
         {
-            GameObject.Destroy(possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z][j]);
+            for (int j = 0; j < possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z].Length; ++j)
+            {
+                if (!possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z][j].CompareTag("Finish") || possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z].Length > 0)
+                {
+                    GameObject.Destroy(possibilitySpaceVisualiserObjects[coordinateToClear.x][coordinateToClear.y][coordinateToClear.z][j]);
+                }
+            }
         }
     }
     /// <summary>
@@ -978,7 +943,11 @@ public class TileGrid : MonoBehaviour
         for (int i = 0; i < numberOfTiles; ++i)
         {
             // Update all the tiles necessary
-            UpdatePossibilitySpaceFromPropergation();
+            if (!UpdatePossibilitySpaceFromPropergation())
+            {
+                Debug.LogError("UpdatePossibilitySpaceFromPropergation has failed in PlaceTilesInGridArea");
+                return;
+            }
 
             // Find the lowest entropy value tile
             if (TryGetLowestEntropyTile(areaStartPosition, areaEndPosition, out Vector3Int lowestEntropyTilesCoords))
@@ -1010,7 +979,11 @@ public class TileGrid : MonoBehaviour
     private void PlanTile()
     {
         // Update all the tiles necessary
-        UpdatePossibilitySpaceFromPropergation();
+        if (!UpdatePossibilitySpaceFromPropergation())
+        {
+            Debug.LogError("UpdatePossibilitySpaceFromPropergation has failed in PlanTile");
+            return;
+        }
 
         // Find the lowest entropy value tile
         if (TryGetLowestEntropyTile(new Vector3Int(tilesBeingPlannedStartX,0,0), new Vector3Int(tilesBeingPlannedEndX, gridDimensions.y, gridDimensions.z), out Vector3Int lowestEntropyTilesCoords))
@@ -1028,24 +1001,7 @@ public class TileGrid : MonoBehaviour
                 //lowestEntropyTilesCoords.y, lowestEntropyTilesCoords.z), newTileComponent.gameObject.transform.rotation, transform).GetComponent<TileComponent>();
                 // Add its neighbors to be updated
                 AddAllNeighboursToPropergationStack(lowestEntropyTilesCoords);
-                ++numberOfTilesPlanned;
             }
-            else
-            {
-                Debug.LogError("Generation failed");
-                Debug.Break();
-                ++restartCounter;
-                if (restartCounter > 10)
-                {
-                    Destroy(gameObject);
-                }
-                ResetGenAttempt();
-            }
-        }
-        else
-        {
-
-            ResetGenAttempt();
         }
     }
     /// <summary>
@@ -1053,103 +1009,51 @@ public class TileGrid : MonoBehaviour
     /// </summary>
     private void ResetGenAttempt()
     {
-        //++restartCounter;
-        //if (restartCounter > 10)
-        //{
-        //    Debug.Log("Restart count reach, destroying tile grid");
-        //    Destroy(gameObject);
-        //}
-        //for (int i = 0; i < tileGrid.Length; ++i)
-        //{
-        //    for (int j = 0; j < tileGrid[i].Length; ++j)
-        //    {
-        //        for (int k = 0; k < tileGrid[i][j].Length; ++k)
-        //        {
-        //            if (tileGrid[i][j][k] != null)
-        //            {
-        //                Destroy(tileGrid[i][j][k].gameObject);
-        //            }
-        //        }
-        //    }
-        //}
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD 
+        Debug.LogWarning("Reseting tiles being planned");
+        #endif
 
-        //tileGrid = new TileComponent[gridDimensions.x][][];
-        //for (int i = 0; i < tileGrid.Length; ++i)
-        //{
-        //    tileGrid[i] = new TileComponent[gridDimensions.y][];
-        //    for (int k = 0; k < tileGrid[i].Length; ++k)
-        //    {
-
-        //        tileGrid[i][k] = new TileComponent[gridDimensions.z];
-        //    }
-        //}
-
-        //possibilitySpace = new List<TileComponent>[gridDimensions.x][][];
-        //for (int i = 0; i < possibilitySpace.Length; ++i)
-        //{
-        //    possibilitySpace[i] = new List<TileComponent>[gridDimensions.y][];
-        //    for (int j = 0; j < possibilitySpace[i].Length; ++j)
-        //    {
-        //        possibilitySpace[i][j] = new List<TileComponent>[gridDimensions.z];
-        //    }
-        //}
-
-        // Flush the stack
+        // Flush the possibility space update stack
         possibilitySpaceLocationsToUpdate.Clear();
-
-        // Reset Planning values
-        //tilesBeingPlannedStartX = gridDimensions.x - gridDimensions.x / 3;
-        //tilesBeingPlannedEndX = gridDimensions.x;
-        progressSlider.maxValue = expectedPlannedTiles;
-        progressSlider.value = 0;
-
-        numberOfTilesPlanned = 0;
-        // Reset the possibility space
         for (int x = 0; x < gridDimensions.x; ++x)
         {
             for (int y = 0; y < gridDimensions.y; ++y)
             {
                 for (int z = 0; z < gridDimensions.z; ++z)
                 {
-                    if (tileGrid[x][y][z] == null)
-                    {
-                        possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
-                        if (showPossibillitySpace)
-                        {
-                            ClearPossibilitySpaceVisulisation(new Vector3Int(x, y, z));
-                            possibilitySpaceVisualiserObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
-                        }
-                        TryAddCoordinateToNeedsUpdatingStack((new Vector3Int(x, y, z)));
-                        //if (x >= tilesBeingPlannedStartX && x < tilesBeingPlannedEndX)
-                        //{
-                        //    // Un-Plan all tiles
-                        //    tileGrid[x][y][z] = null;
-
-                        //}
-                    }
-                    else
-                    {
-                        possibilitySpace[x][y][z] = new List<TileComponent>() { tileGrid[x][y][z] };
-                        if (showPossibillitySpace)
-                        {
-                            ClearPossibilitySpaceVisulisation(new Vector3Int(x, y, z));
-                            possibilitySpaceVisualiserObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
-                        }
-                    }
+                    possibilityUpdateExistsInStack[x][y][z] = false;
                 }
             }
         }
-        // Plan tiles again
-        //SetUpPlannedTiles();
+
+        // Reset Planning values
+        progressSlider.value = 0;
+        // Reset the planning possibility space
+        for (int x = tilesBeingPlannedStartX; x < gridDimensions.x; ++x)
+        {
+            for (int y = 0; y < gridDimensions.y; ++y)
+            {
+                for (int z = 0; z < gridDimensions.z; ++z)
+                {
+                    // Reset the previous choice
+                    tileGrid[x][y][z] = null;
+                    possibilitySpace[x][y][z] = new List<TileComponent>(exampleGridData.tilePrefabs);
+                    if (showPossibillitySpace)
+                    {
+                        ClearPossibilitySpaceVisulisation(new Vector3Int(x, y, z));
+                        possibilitySpaceVisualiserObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x, y, z));
+                    }
+                    TryAddCoordinateToNeedsUpdatingStack((new Vector3Int(x, y, z)));
+                }
+            }
+        }
     }
+
+    /// <summary>
+    /// Sets up all the tiles in the section of the grid for tiles that have already been planned ready to be spawn as visible objects
+    /// </summary>
     private void SetUpPlannedTiles()
     {
-        ++restartCounter;
-        if (restartCounter > 10)
-        {
-            Destroy(gameObject);
-            return;
-        }
         //// Add every tiles to be updated
         for (int x = plannedTilesStartX; x < tilesBeingPlannedStartX; ++x)
         {
@@ -1163,12 +1067,17 @@ public class TileGrid : MonoBehaviour
             }
         }
 
+        // Get how many tiles should be planned
         int numberOfTiles = (tilesBeingPlannedStartX - plannedTilesStartX) * gridDimensions.y * gridDimensions.z;
 
         for (int i = 0; i < numberOfTiles; ++i)
         {
             // Update all the tiles necessary
-            UpdatePossibilitySpaceFromPropergation();
+            if (!UpdatePossibilitySpaceFromPropergation())
+            {
+                Debug.LogError("UpdatePossibilitySpaceFromPropergation has failed in SetUpPlannedTiles");
+                return;
+            }
 
             // Find the lowest entropy value tile
             if (TryGetLowestEntropyTile(new Vector3Int(plannedTilesStartX, 0, 0), new Vector3Int(tilesBeingPlannedStartX, gridDimensions.y, gridDimensions.z), out Vector3Int lowestEntropyTilesCoords))
@@ -1238,7 +1147,7 @@ public class TileGrid : MonoBehaviour
     /// <summary>
     /// Updates all the possibility spaces added to the stack for updating, will add more tiles to the stack if updating the possibility space changes the stack
     /// </summary>
-    private void UpdatePossibilitySpaceFromPropergation()
+    private bool UpdatePossibilitySpaceFromPropergation()
     {
         int tilesAssesedCount = 0; // This counted is just to prevent an endless loop
         while (possibilitySpaceLocationsToUpdate.Count > 0)
@@ -1249,11 +1158,15 @@ public class TileGrid : MonoBehaviour
                 break;
             }
 
-            UpdateSinglePossibilitySpaceLocation();
+            if (!UpdateSinglePossibilitySpaceLocation())
+            {
+                Debug.LogError("UpdateSinglePossibilitySpaceLocation failed in UpdatePossibilitySpaceFromPropergation");
+                return false;
+            }
 
             ++tilesAssesedCount;
         }
-
+        return true;
 
     }
 
@@ -1273,32 +1186,8 @@ public class TileGrid : MonoBehaviour
 
             if (possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Count == 0)
             {
-                // SHow the possibility space
-                if (showPossibillitySpace == false)
-                {
-                    showPossibillitySpace = true;
-                    possibilitySpaceVisualiserObjects = new GameObject[gridDimensions.x][][][];
-                    for (int x = 0; x < gridDimensions.x; ++x)
-                    {
-                        possibilitySpaceVisualiserObjects[x] = new GameObject[gridDimensions.y][][];
-                        for (int y = 0; y < gridDimensions.y; ++y)
-                        {
-                            possibilitySpaceVisualiserObjects[x][y] = new GameObject[gridDimensions.z][];
-                            for (int z = 0; z < gridDimensions.z; ++z)
-                            {
-                                if (coordAssesed == new Vector3Int(x,y,z))
-                                {
-                                    Debug.Log("HERE");
-                                }
-                                possibilitySpaceVisualiserObjects[x][y][z] = AddProabilitySpaceObjects(possibilitySpace[x][y][z], new Vector3Int(x,y,z));
-                            }
-                        }
-                    }
-                }
-                Debug.Break();
-                //Debug.LogError("Attempting regeneration from UpdateSinglePossibilitySpaceLocation");
-                //ResetGenAttempt();
-                Debug.LogError("Possibility space was empty for tile at grid position:" + new Vector3Int(coordAssesed.x, coordAssesed.y, coordAssesed.z).ToString());
+                ResetGenAttempt();
+                Debug.LogWarning("Possibility space was empty for tile at grid position:" + new Vector3Int(coordAssesed.x, coordAssesed.y, coordAssesed.z).ToString());
                 return false;
             }
 
