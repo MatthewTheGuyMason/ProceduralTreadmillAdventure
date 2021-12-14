@@ -32,8 +32,7 @@ public class TileGrid : MonoBehaviour
 
     [SerializeField] [Tooltip("The number of possibility spaces to check per frame from the stack, will make each frame slower but more likely to finish plan before reaching next section")]
     private int numberOfPossiblitySpacesToCheckPerFrame = 200;
-    [SerializeField]
-    [Tooltip("The amount the x offset of the treadmill effect is multiplied by, used to transition biomes quicker")]
+    [SerializeField] [Tooltip("The amount the x offset of the treadmill effect is multiplied by, used to transition biomes quicker")]
     private int xOffsetMultiplier = 1;
 
     [SerializeField] [Tooltip("The tile set generated from an example grid")]
@@ -89,10 +88,12 @@ public class TileGrid : MonoBehaviour
     /// The tiles that have been placed down in the grid
     /// </summary>
     private TileComponent[][][] tileGrid;
+
+    private TileData.BiomeType previousBiomeType;
     #endregion
 
     #region Unity Methods
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
@@ -121,7 +122,7 @@ public class TileGrid : MonoBehaviour
             Gizmos.DrawSphere(new Vector3(x, 0, -3f), 0.5f);
         }
     }
-#endif
+    #endif
 
     private void Start()
     {
@@ -310,15 +311,10 @@ public class TileGrid : MonoBehaviour
     /// <returns>the weight of a given tile adjusted for its position in the grid</returns>
     private float GetWeightOfTileAdjustedForPosition(TileComponent tileComponent, int xPosition, int yPosition)
     {
-        //return tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float baseWeight = tileComponent.TileData.GetWeight(yPosition, gridDimensions.y);
         float transitionWeight;
         // Get the current weights from the transitional data
         BiomeTransitionaryData.BiomeWeights weights = biomeTransitionaryData.GetValuesAtTile(xPosition + (xOffset * xOffsetMultiplier));
-        if (weights.grasslandUnitInterval < weights.desertUnitInterval)
-        {
-            //Debug.Log("At desert");
-        }
         switch (tileComponent.TileData.TileBiomeType)
         {
             case TileData.BiomeType.Desert:
@@ -340,7 +336,6 @@ public class TileGrid : MonoBehaviour
                 }
                 else
                 {
-
                     return float.Epsilon;
                 }
             case TileData.BiomeType.Grassland:
@@ -395,20 +390,6 @@ public class TileGrid : MonoBehaviour
             }
             weightSum += tileWeight;
             weightTimesLogWeight += tileWeight * Mathf.Log(tileWeight);
-        }
-
-        return (Mathf.Log(weightSum) - weightTimesLogWeight) / weightSum;
-    }
-
-    private float ShannonEntropy(float[] possibilityWeights)
-    {
-        float weightSum = 0.0f;
-        float weightTimesLogWeight = 0.0f;
-        for (int i = 0; i < possibilityWeights.Length; ++i)
-        {
-            // Discount any tiles that have a wieght of zero, Whilst they shouldn't really have any tiles with
-            weightSum += possibilityWeights[i];
-            weightTimesLogWeight += possibilityWeights[i] * Mathf.Log(possibilityWeights[i]);
         }
 
         return (Mathf.Log(weightSum) - weightTimesLogWeight) / weightSum;
@@ -530,17 +511,24 @@ public class TileGrid : MonoBehaviour
         }
         List<TileComponent> validTiles = new List<TileComponent>(exampleGridData.tilePrefabs);
 
+        Dictionary<TileComponent, float> tileWeights = new Dictionary<TileComponent, float>();
+
         // Strip out any and tiles that don't have a chance of spawn at this position
         for (int i = 0; i < validTiles.Count; ++i)
         {
-            if (GetWeightOfTileAdjustedForPosition(validTiles[i], xPosition, yPosition) <= 0f)
+            float weight = GetWeightOfTileAdjustedForPosition(validTiles[i], xPosition, yPosition);
+            if (weight <= 0f)
             {
                 validTiles.RemoveAt(i);
                 --i;
             }
+            else
+            {
+                tileWeights.Add(validTiles[i], weight);
+            }
         }
 
-        // remove all tiles that could not spawn based on neighboring sockets
+        // Remove all tiles that could not spawn based on neighboring sockets
         Vector3Int gridPosition = new Vector3Int(xPosition, yPosition, zPosition);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.up, 1, SocketData.Sides.Above);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.down, 1, SocketData.Sides.Below);
@@ -548,6 +536,64 @@ public class TileGrid : MonoBehaviour
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.right, 0, SocketData.Sides.Right);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.back, 2, SocketData.Sides.Back);
         validTiles = RemoveInvalidPossibleTilesBasedOnSocket(validTiles, gridPosition, Vector3Int.left, 0, SocketData.Sides.Left);
+
+        // If all tiles left have epsilon weighting
+        // This is code that could mostly likely have be done better with more time, however it fixes an issue with incorrect biomes related transition tile placement
+        bool allTilesEpislon = true;
+        for (int i = 0; i < validTiles.Count; ++i)
+        {
+            if (tileWeights.TryGetValue(validTiles[i], out float weight))
+            {
+                if (weight != float.Epsilon)
+                {
+                    allTilesEpislon = false;
+                    break;
+                }
+            }
+        }
+        if (allTilesEpislon)
+        {
+
+            List<TileComponent> newValidList = new List<TileComponent>(validTiles);
+            // Get the next and previous biomes to make sure they are valid
+            BiomeTransitionaryData.BiomeWeights nextBiomeType = biomeTransitionaryData.GetNextKey(xPosition + xOffset);
+            BiomeTransitionaryData.BiomeWeights lastBiomeType = biomeTransitionaryData.GetKeyFrameBeforeLast(xPosition + xOffset);
+
+            bool removeDesert = true;
+            if (lastBiomeType.desertUnitInterval > 0 || nextBiomeType.desertUnitInterval > 0)
+            {
+                removeDesert = false;
+            }
+            bool removeTundra = true;
+            if (lastBiomeType.tundraUnitInterval > 0 || nextBiomeType.tundraUnitInterval > 0)
+            {
+                removeTundra = false;
+            }
+
+            // Validate each one is in the correct biomes
+            for (int i = 0; i < newValidList.Count; ++i)
+            {
+                if (removeDesert)
+                {
+                    if (newValidList[i].TileData.TileBiomeType == TileData.BiomeType.Desert || validTiles[i].TileData.TileBiomeType == TileData.BiomeType.DesertToGrassland)
+                    {
+                        newValidList.RemoveAt(i);
+                        --i;
+                    }
+
+                }
+                if (removeTundra)
+                {
+                    if (newValidList[i].TileData.TileBiomeType == TileData.BiomeType.Tundra || validTiles[i].TileData.TileBiomeType == TileData.BiomeType.GrasslandToSnow)
+                    {
+                        newValidList.RemoveAt(i);
+                        --i;
+                    }
+                }
+
+            }
+        }
+
 
         return validTiles;
     }
