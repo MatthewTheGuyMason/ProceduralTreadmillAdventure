@@ -1,0 +1,10 @@
+- Editor slow to use
+- Chance of failure can lead to needing to cacth up
+- Not as fast as a player could be
+- Could buffer a lot more planned tiles
+- Prototyping could be more memory effecient
+- More area of optimisation that I haven't even gotten to
+- biome types
+
+
+#if UNITY_EDITOR 

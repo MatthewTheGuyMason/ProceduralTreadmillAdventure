@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2449656496153241509
+--- !u!1 &6165696915134833343
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5054657123567850114}
-  - component: {fileID: 5903213953341957191}
-  - component: {fileID: 694456619821353961}
+  - component: {fileID: 1041933212623944914}
+  - component: {fileID: 6360776639567021450}
+  - component: {fileID: 264975125486344946}
   m_Layer: 0
   m_Name: SlopedCornerSnowTile 1PrototypeRight
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5054657123567850114
+--- !u!4 &1041933212623944914
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2449656496153241509}
+  m_GameObject: {fileID: 6165696915134833343}
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 86, y: 2, z: 4}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1528924503156479088}
+  - {fileID: 5921274717506813254}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!65 &5903213953341957191
+--- !u!65 &6360776639567021450
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2449656496153241509}
+  m_GameObject: {fileID: 6165696915134833343}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &694456619821353961
+--- !u!114 &264975125486344946
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2449656496153241509}
+  m_GameObject: {fileID: 6165696915134833343}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -69,7 +69,7 @@ MonoBehaviour:
     tileSocketData: {fileID: 11400000, guid: 8b275a0aae3188542aaf161cbf905bfa, type: 2}
     tileType: 2
     biomeType: -2
---- !u!1 &8858226282645688153
+--- !u!1 &7811148256462937959
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,9 +77,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1528924503156479088}
-  - component: {fileID: 2632095097169681797}
-  - component: {fileID: 783959720777175502}
+  - component: {fileID: 5921274717506813254}
+  - component: {fileID: 6984386585829225541}
+  - component: {fileID: 8682765511410608126}
   m_Layer: 0
   m_Name: SlopedCornerSnowTileModel
   m_TagString: Untagged
@@ -87,35 +87,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1528924503156479088
+--- !u!4 &5921274717506813254
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8858226282645688153}
+  m_GameObject: {fileID: 7811148256462937959}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 5054657123567850114}
+  m_Father: {fileID: 1041933212623944914}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2632095097169681797
+--- !u!33 &6984386585829225541
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8858226282645688153}
+  m_GameObject: {fileID: 7811148256462937959}
   m_Mesh: {fileID: -2432090755550338912, guid: fbf9cef4b6d33814d9672756f9a7550b, type: 3}
---- !u!23 &783959720777175502
+--- !u!23 &8682765511410608126
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8858226282645688153}
+  m_GameObject: {fileID: 7811148256462937959}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

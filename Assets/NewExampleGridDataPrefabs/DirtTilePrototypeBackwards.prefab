@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &6381333168014617102
+--- !u!1 &702709967169908004
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5009306485933761353}
-  - component: {fileID: 4714751443706058444}
-  - component: {fileID: 3329743128982298399}
+  - component: {fileID: 8399370119465946732}
+  - component: {fileID: 4483000854775610281}
+  - component: {fileID: 8410676629219976704}
   m_Layer: 0
   m_Name: DirtTilePrototypeBackwards
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5009306485933761353
+--- !u!4 &8399370119465946732
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6381333168014617102}
+  m_GameObject: {fileID: 702709967169908004}
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 94, y: 0, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 8093567679669201054}
+  - {fileID: 8734450420761845601}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &4714751443706058444
+--- !u!65 &4483000854775610281
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6381333168014617102}
+  m_GameObject: {fileID: 702709967169908004}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3329743128982298399
+--- !u!114 &8410676629219976704
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6381333168014617102}
+  m_GameObject: {fileID: 702709967169908004}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -69,7 +69,7 @@ MonoBehaviour:
     tileSocketData: {fileID: 11400000, guid: 71093336c14ebea448aecefbf276e822, type: 2}
     tileType: 2
     biomeType: 3
---- !u!1 &6691265352784458051
+--- !u!1 &3270873151976795835
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,9 +77,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8093567679669201054}
-  - component: {fileID: 7859128532808801674}
-  - component: {fileID: 4251560092862290822}
+  - component: {fileID: 8734450420761845601}
+  - component: {fileID: 7197289887881479796}
+  - component: {fileID: 7627689329512651525}
   m_Layer: 0
   m_Name: DirtTileModel
   m_TagString: Untagged
@@ -87,35 +87,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8093567679669201054
+--- !u!4 &8734450420761845601
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6691265352784458051}
+  m_GameObject: {fileID: 3270873151976795835}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 5009306485933761353}
+  m_Father: {fileID: 8399370119465946732}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7859128532808801674
+--- !u!33 &7197289887881479796
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6691265352784458051}
+  m_GameObject: {fileID: 3270873151976795835}
   m_Mesh: {fileID: -2432090755550338912, guid: 78771b1634bfafd4d9672fee4eaeae86, type: 3}
---- !u!23 &4251560092862290822
+--- !u!23 &7627689329512651525
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6691265352784458051}
+  m_GameObject: {fileID: 3270873151976795835}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

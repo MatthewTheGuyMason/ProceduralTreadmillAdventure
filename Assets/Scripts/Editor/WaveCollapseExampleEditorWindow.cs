@@ -1,77 +1,110 @@
+//====================================================================================================================================================================================================================================================================================================================================================
+//  Name:               WaveCollapseExampleEditorWindow.cs
+//  Author:             Matthew Mason
+//  Date Created:       15/12/2021
+//  Date Last Modified  15/12/2021
+//  Brief:              An editor window that is used to help build a example grid and for turning that example grid into a tile-set
+//====================================================================================================================================================================================================================================================================================================================================================
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// An editor window that is used to help build a example grid and for turning that example grid into a tile-set
+/// </summary>
 public class WaveCollapseExampleEditorWindow : EditorWindow
 {
+    #region Private Variables
+    /// <summary>
+    /// The tiles grid being modified and used
+    /// </summary>
     private TileComponent[][][] tileGrid;
-
+    /// <summary>
+    /// The grid dimensions the grid will be set to and is expected to be
+    /// </summary>
     private Vector3Int gridDimensions;
-
+    /// <summary>
+    /// The controller for the grid being modified and used 
+    /// </summary>
     private ExampleGridController gridController;
-
+    /// <summary>
+    /// The tile that will be added to new grid cells that don't already have a tile component
+    /// </summary>
     private GameObject defaultTilePrefab;
-
-    private GameObject defaultFloorTilePrefab;
-
-    [SerializeField]
-    private GameObject[] tilePrefabsInUse;
-
-    private SerializedProperty tilePrefabsInUseProperty;
-
-    private bool showPrefabsInUseArray;
-
-    private Vector3Int brushBottomLeft;
-
-    private Vector3Int brushTopRight;
-
+    /// <summary>
+    /// The bottom back left cell of the area that will be filled in with brush tile on area fill
+    /// </summary>
+    private Vector3Int brushBottomBackLeft;
+    /// <summary>
+    /// The top front right tile of the area that will be filled in with brush tile on area fill
+    /// </summary>
+    private Vector3Int brushTopFrontRight;
+    /// <summary>
+    /// The tile that the area will be filled with on area filled
+    /// </summary>
     private TileComponent brushTile;
-
-    private int idToUpdate = -1;
-
+    /// <summary>
+    /// The ID to update the biomes type of
+    /// </summary>
+    private int idToUpdateBiomesOf = -1;
+    /// <summary>
+    /// The biome type to change the tiles of given ID to
+    /// </summary>
     private TileData.BiomeType biomeTypeToChangeTo;
+    #endregion
 
-    // Add menu named "My Window" to the Window menu
-    [MenuItem("Window/Wave Collapse Example Editor Window")]
-    static void Init()
-    {
-        // Get existing open window or if none, make a new one:
-        WaveCollapseExampleEditorWindow window = (WaveCollapseExampleEditorWindow)EditorWindow.GetWindow(typeof(WaveCollapseExampleEditorWindow));
-        window.Show();
-    }
-
+    #region Unity Methods
     private void OnGUI()
     {
+        EditorGUILayout.LabelField("Example Grid Starting", EditorStyles.boldLabel);
+        // Grid Dimensions
         gridDimensions = EditorGUILayout.Vector3IntField("Grid Dimensions", gridDimensions);
+        // Controlled grid
         gridController = (ExampleGridController)EditorGUILayout.ObjectField("Grid Parent ExampleGridController", gridController, typeof(ExampleGridController), true);
+        // Default tile
         defaultTilePrefab = (GameObject)EditorGUILayout.ObjectField("Default Tile Prefab", defaultTilePrefab, typeof(GameObject), false);
-
-        
-        //int tilePrefabsInUseArraySize = EditorGUILayout.IntField("Tile Prefabs In Use Size", tilePrefabsInUse.Length);
-        //if (tilePrefabsInUseArraySize != tilePrefabsInUse.Length)
-        //{
-        //    GameObject[] newArray = new GameObject[tilePrefabsInUseArraySize];
-        //    int smallestArrayLength = tilePrefabsInUse.Length < tilePrefabsInUseArraySize ? tilePrefabsInUse.Length : tilePrefabsInUseArraySize;
-        //    System.Array.Copy(tilePrefabsInUse, newArray, smallestArrayLength);
-        //    tilePrefabsInUse = newArray;
-        //}
-        //if (showPrefabsInUseArray = EditorGUILayout.Foldout(showPrefabsInUseArray, "Show Prefabs Array"))
-        //{
-        //    for (int i = 0; i < tilePrefabsInUseArraySize; ++i)
-        //    {
-        //        tilePrefabsInUse[i] = (GameObject)EditorGUILayout.ObjectField(tilePrefabsInUse[i], typeof(GameObject), false);
-        //    }
-        //}
-
+        // Initial Grid Building
         if (GUILayout.Button("Build Grid Template"))
         {
             BuildGridObjectParents();
             AssetDatabase.SaveAssets();
         }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Example Grid Editing", EditorStyles.boldLabel);
+        // ID Based Biomes type updating
+        idToUpdateBiomesOf = EditorGUILayout.IntField("Id To Update", idToUpdateBiomesOf);
+        biomeTypeToChangeTo = (TileData.BiomeType)EditorGUILayout.EnumPopup("Id To Update", biomeTypeToChangeTo);
+        if (GUILayout.Button("Update biomes type of tiles with ID"))
+        {
+            gridController.ChanceBiomeTypeOfTilesWithID(idToUpdateBiomesOf, biomeTypeToChangeTo);
+        }
+        // Area Brush
+        brushBottomBackLeft = EditorGUILayout.Vector3IntField("Brush Bottom Back Left (Inclusive to placement)", brushBottomBackLeft);
+        brushTopFrontRight = EditorGUILayout.Vector3IntField("Brush Top Front Right (Inclusive to placement)", brushTopFrontRight);
+        brushTile = (TileComponent)EditorGUILayout.ObjectField("Brush Tile", brushTile, typeof(TileComponent), false);
+        if (GUILayout.Button("Fill Area"))
+        {
+            gridController.FillInAreaWithTile(brushBottomBackLeft, brushTopFrontRight, brushTile.gameObject);
+            AssetDatabase.SaveAssets();
+        }
+        if (GUILayout.Button("Adjust Grid Dimensions"))
+        {
+            if (gridController != null)
+            {
+                gridController.AdjustGridDimensions(gridDimensions, defaultTilePrefab);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Tile Set Generation", EditorStyles.boldLabel);
+        // Generation
         if (GUILayout.Button("Generate Build Data"))
         {
-            if (BuildExampleGridData(out List<GameObject> prefabBasis, out List<TileData> tileDatas))
+            if (BuildTileSet(out List<GameObject> prefabBasis, out List<TileData> tileDatas))
             {
                 // Create Folder To Store Prefabs
                 AssetDatabase.CreateFolder("Assets", "NewExampleGridDataPrefabs");
@@ -103,10 +136,10 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                 }
 
                 TileSet exampleGridData = TileSet.CreateInstance<TileSet>();
-                exampleGridData.tilePrefabs = new List<TileComponent>();
+                exampleGridData.TilePrefabs = new List<TileComponent>();
                 for (int i = 0; i < newPrefabs.Count; ++i)
                 {
-                    exampleGridData.tilePrefabs.Add(newPrefabs[i].GetComponent<TileComponent>());
+                    exampleGridData.TilePrefabs.Add(newPrefabs[i].GetComponent<TileComponent>());
                 }
                 AssetDatabase.CreateAsset(exampleGridData, "Assets/NewExampleGridData.asset");
             }
@@ -115,51 +148,28 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                 Debug.LogError("Generate Example Build Data Failed");
             }
         }
-
-        if (GUILayout.Button("Adjust Grid Dimensions"))
-        {
-            if (gridController != null)
-            {
-                gridController.AdjustGridDimensions(gridDimensions, defaultTilePrefab);
-            }
-            AssetDatabase.SaveAssets();
-        }
-
-        brushBottomLeft = EditorGUILayout.Vector3IntField("Brush Bottom Left", brushBottomLeft);
-        brushTopRight = EditorGUILayout.Vector3IntField("Brush Top Right", brushTopRight);
-        brushTile = (TileComponent)EditorGUILayout.ObjectField("Brush Tile", brushTile, typeof(TileComponent), false);
-
-        if (GUILayout.Button("Fill Area"))
-        {
-            gridController.FillInAreaWithTile(brushBottomLeft, brushTopRight, brushTile.gameObject);
-            AssetDatabase.SaveAssets();
-        }
-
-        idToUpdate = EditorGUILayout.IntField("Id To Update", idToUpdate);
-        biomeTypeToChangeTo = (TileData.BiomeType)EditorGUILayout.EnumPopup("Id To Update", biomeTypeToChangeTo);
-        if (GUILayout.Button("Update biome type of tiles with ID"))
-        {
-            gridController.UpdateBiomeTypeOfTilesWithID(idToUpdate, biomeTypeToChangeTo);
-        }
     }
+    #endregion
 
-    // Start is called before the first frame update
-    void Start()
+    #region Public Static Methods
+    // Add menu named "My Window" to the Window menu
+    [MenuItem("Window/Wave Collapse Example Editor Window")]
+    public static void Init()
     {
-        
+        // Get existing open window or if none, make a new one:
+        WaveCollapseExampleEditorWindow window = (WaveCollapseExampleEditorWindow)EditorWindow.GetWindow(typeof(WaveCollapseExampleEditorWindow));
+        window.Show();
     }
+    #endregion
 
-    private void BuildGridObjectParents()
-    {
-        gridController = new GameObject("ExampleGrid").AddComponent<ExampleGridController>();
-        gridController.BuildGridObjectParents(gridDimensions, defaultTilePrefab);
-
-
-    }
-
-    // TODO: Add some code to detectRotation of a tile and account for it when building the data set
-
-    private bool BuildExampleGridData(out List<GameObject> prefabBasisObjects, out List<TileData> tileDatas)
+    #region Private Methods
+    /// <summary>
+    /// Gets a set of game objects to be used a the basis for the new tile set prefabs as well as the tile data's they will contain
+    /// </summary>
+    /// <param name="prefabBasisObjects">Set of game objects to be used a the basis for the new tile set prefabs</param>
+    /// <param name="tileDatas">tile data for each of the new tile types</param>
+    /// <returns>True if the building was successful, false otherwise</returns>
+    private bool BuildTileSet(out List<GameObject> prefabBasisObjects, out List<TileData> tileDatas)
     {
         tileDatas = new List<TileData>();
         prefabBasisObjects = new List<GameObject>();
@@ -208,13 +218,16 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                     if (gridController != null)
                     {
                         TileComponent currentTile = tileGrid[x][y][z];
+                        // If the current tile ID is already found add the frequency of that tile at the current y position and its neighbor sockets to the valid neighbors
                         if (TryGetTileWithMatchingID(tileDatas, currentTile.TileData.ID, out int index))
                         {
-                            ++currentTileFequencyForEachYPosition[index][y]; // Adding to the frequency of that tile at the current y position 
+                            ++currentTileFequencyForEachYPosition[index][y]; // Adding to 
                             AddAllNeighbouringSocketsToSocketData(tileDatas[index].TileSocketData, new Vector3Int(x, y, z), GetNumberOf90DegreeTurnsFromRotationAngle(currentTile.transform.rotation.eulerAngles.y));
                         }
+                        // Otherwise make a prefab basis and tile data from it, then add its frequency and neighbors
                         else
                         {
+
                             tileDatas.Add(new TileData(currentTile.TileData));
                             prefabBasisObjects.Add(currentTile.gameObject);
                             // Create the new list of arrays for frequency for each y position and add one to the current y position
@@ -226,15 +239,12 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
                             tileDatas[tileDatas.Count - 1].TileSocketData = newSocketData;
                             AddAllNeighbouringSocketsToSocketData(tileDatas[tileDatas.Count - 1].TileSocketData, new Vector3Int(x, y, z), GetNumberOf90DegreeTurnsFromRotationAngle(currentTile.transform.rotation.eulerAngles.y));
                         }
-                        // Add all the nearby sockets to its lists
-
                     }
                 }
             }
         }
 
-        // Assign the weights for each tile type
-
+        // Assign the weights for each tile type and each y value
         float weightPerFequency = 1.0f / (gridDimensions.x * gridDimensions.z);
 
         for (int i = 0; i < tileDatas.Count; ++i)
@@ -249,7 +259,13 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
 
         return true;
     }
-
+    /// <summary>
+    /// Attempt to find a tile in a given list with an ID matching the one given
+    /// </summary>
+    /// <param name="listToCheck">The list to search through for a tile with given ID</param>
+    /// <param name="IDtoCheckFor">The ID to search the tiles in the list for</param>
+    /// <param name="index">The index in the list of tiles with an ID matching the one given</param>
+    /// <returns>True if the tile with a matching ID is found, false otherwise</returns>
     private bool TryGetTileWithMatchingID(List<TileData> listToCheck, int IDtoCheckFor, out int index)
     {
         index = -1;
@@ -265,157 +281,41 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         return false;
     }
 
-    private void AddAllNeighbouringSocketsToSocketData(SocketData socketData, Vector3Int gridCoords, int numberOf90TurnsFromRotation)
-    {
-        // Iterate over every vector3Int Axis
-        for (int i = 0; i < 3; ++i)
-        {
-            // Get the offset
-            Vector3Int offset = Vector3Int.zero;
-            offset[i] = 1;
-            // Adjust the direction to add to based on the object's rotation
-            SocketData.Sides sideDirection = SocketData.RotateSidesDirection(SocketData.GetSideFromCooridnateOff(offset), 4 - numberOf90TurnsFromRotation);
-
-            // Check if the offset gird coordinate is within the grid to assign the tile component that is at the offset position
-            TileComponent tileComponent = null;
-            if (gridCoords[i] + 1 < gridDimensions[i])
-            {
-                Vector3Int offestPosition = gridCoords + offset;
-                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
-            }
-
-            // Add the opposing sockets to this
-            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
-
-            // Do the same to the opposite side
-            offset[i] = -1;
-            sideDirection = SocketData.GetOpposingSocket(sideDirection);
-            tileComponent = null; 
-            if (gridCoords[i] - 1 > -1)
-            {
-                Vector3Int offestPosition = gridCoords + offset;
-                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
-            }
-            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
-        }
-
-        //// Right Face
-        //if (gridCoords.x + 1 < gridDimensions.x)
-        //{
-        //    socketDirection = SocketData.Sides.Right;
-
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, tileGrid[gridCoords.x + 1][gridCoords.y][gridCoords.z]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Right, socketData, null);
-        //}
-
-        //// Left Face
-        //if (gridCoords.x - 1 > -1)
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, tileGrid[gridCoords.x - 1][gridCoords.y][gridCoords.z]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Left, socketData, null);
-        //}
-
-        //// Above Face
-        //if (gridCoords.y + 1 < gridDimensions.y)
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, tileGrid[gridCoords.x][gridCoords.y + 1][gridCoords.z]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Above, socketData, null);
-        //}
-
-        //// Below Face
-        //if (gridCoords.y - 1 > -1)
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, tileGrid[gridCoords.x][gridCoords.y - 1][gridCoords.z]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Below, socketData, null);
-        //}
-
-        //// Front Face
-        //if (gridCoords.z + 1 < gridDimensions.z)
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z + 1]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Front, socketData, null);
-        //}
-
-        //// Back Face
-        //if (gridCoords.z - 1 > -1)
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, tileGrid[gridCoords.x][gridCoords.y][gridCoords.z - 1]);
-        //}
-        //else
-        //{
-        //    AddOpposingSocketToValidSockets(SocketData.Sides.Back, socketData, null);
-        //}
-
-        // Rotate the socket side to be correct for the rotation of the tile
-    }
-
-    private void AddOpposingSocketToValidSockets(SocketData.Sides SideBeingAddedToo, SocketData.Sides socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
+    /// <summary>
+    /// Return the number of times a tile would have been rotated around its y axis 90 degrees based on it eular angles
+    /// </summary>
+    /// <param name="rotation">The Y euler rotation value</param>
+    /// <returns>The number of times a tile would have been rotated around its y axis 90 degrees based on it eular angles</returns>
+    private int GetNumberOf90DegreeTurnsFromRotationAngle(float rotation)
     {
         // Check rotation of the opposing tile component 
-        int opposingID;
-        SocketData.Sides otherSocketDirection = SocketData.Sides.Undecided;
-        if (opposingTileComponent != null)
+        float clockwiseRotation = rotation;
+        if (rotation < 0)
         {
-            otherSocketDirection = SocketData.GetOpposingSocket(socketDirection);
-            otherSocketDirection = SocketData.RotateSidesDirection(otherSocketDirection, 4 - GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y));
-            opposingID = opposingTileComponent.TileData.TileSocketData.GetIdOfSide(otherSocketDirection);
-        }
-        else
-        {
-            opposingID = -1;
+            clockwiseRotation = 360 + rotation;
         }
 
-        List<int> validNeighbourList = socketDataToAddTo.validNeighbours.GetValidNeighbourListForSide(SideBeingAddedToo);
-
-        if (!validNeighbourList.Contains(opposingID))
+        // If it is rotated then adjust the side that must be gotten accordingly
+        if (Mathf.Round(clockwiseRotation) == 90f)
         {
-            validNeighbourList.Add(opposingID);
-            if (opposingID == 24)
-            {
-                Debug.Log("Adding The Snow stuff");
-            }
-            if (SideBeingAddedToo != socketDirection)
-            {
-                if (opposingID != -1)
-                {
-                    Debug.Log("Other tile rotated: " + GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y) + " times");
-                    Debug.Log("Adding " + otherSocketDirection + " facing socket to " + SideBeingAddedToo + " Socket, connection direction: " + socketDirection);
-                }
-            }
+            return 1;
         }
-    }
-    // Todo 
-    private bool TryGetTileComponentWithMatchingIdFromPrefabList(GameObject[] gameObjects, int IdToMatch, out TileComponent tileComponent)
-    {
-        for (int i = 0; i < gameObjects.Length; ++i)
+        else if (Mathf.Round(clockwiseRotation) == 180f)
         {
-            if (gameObjects[i].TryGetComponent<TileComponent>(out tileComponent))
-            {
-                if (tileComponent.TileData.ID == IdToMatch)
-                {
-                    return true;
-                }
-            }
+            return 2;
         }
-        tileComponent = null;
-        return false;
+        else if (Mathf.Round(clockwiseRotation) == 270f)
+        {
+            return 3;
+        }
+        return 0;
     }
 
+    /// <summary>
+    /// Creates a set of prefab Game Object for the other 3 90 degree rotations of a tile and returns their tile components
+    /// </summary>
+    /// <param name="tileComponent">The original tile component to basis the new prefabs and their tile component off</param>
+    /// <returns>A set of prefab Game Object for the other 3 90 degree rotations of a tile and returns their tile components</returns>
     private TileComponent[] CreatePrototypes(TileComponent tileComponent)
     {
         TileComponent[] newTileComponents = new TileComponent[3];
@@ -457,40 +357,83 @@ public class WaveCollapseExampleEditorWindow : EditorWindow
         return newTileComponents;
     }
 
-    private int GetNumberOf90DegreeTurnsFromRotationAngle(float rotation)
+    /// <summary>
+    /// Add all the Neighbors of a cell at the given coordinates to the list of valid neighbors in a given socket data 
+    /// </summary>
+    /// <param name="socketData">The Socket data toad</param>
+    /// <param name="gridCoords">The coordinate the socket data would be located at</param>
+    /// <param name="numberOf90TurnsFromRotation">The number of tiles to rotate the sides socket data 90 degrees around an invisible y Axis (To allow for tile rotation in example)</param>
+    private void AddAllNeighbouringSocketsToSocketData(SocketData socketData, Vector3Int gridCoords, int numberOf90TurnsFromRotation)
+    {
+        // Iterate over every vector3Int Axis
+        for (int i = 0; i < 3; ++i)
+        {
+            // Get the offset
+            Vector3Int offset = Vector3Int.zero;
+            offset[i] = 1;
+            // Adjust the direction to add to based on the object's rotation
+            SocketData.Sides sideDirection = SocketData.RotateSidesDirection(SocketData.GetSideFromCooridnateOff(offset), 4 - numberOf90TurnsFromRotation);
+
+            // Check if the offset gird coordinate is within the grid to assign the tile component that is at the offset position
+            TileComponent tileComponent = null;
+            if (gridCoords[i] + 1 < gridDimensions[i])
+            {
+                Vector3Int offestPosition = gridCoords + offset;
+                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
+            }
+
+            // Add the opposing sockets to this
+            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
+
+            // Do the same to the opposite side
+            offset[i] = -1;
+            sideDirection = SocketData.GetOpposingSocket(sideDirection);
+            tileComponent = null;
+            if (gridCoords[i] - 1 > -1)
+            {
+                Vector3Int offestPosition = gridCoords + offset;
+                tileComponent = tileGrid[offestPosition.x][offestPosition.y][offestPosition.z];
+            }
+            AddOpposingSocketToValidSockets(sideDirection, SocketData.GetSideFromCooridnateOff(offset), socketData, tileComponent);
+        }
+    }
+    /// <summary>
+    /// Add the socket ID of an opposing tile component to a valid neighbor list of a socket data based on the side given
+    /// </summary>
+    /// <param name="SideBeingAddedToo">The side of the socket data that the valid ID will be added too</param>
+    /// <param name="socketDirection">The direction the side added too is currently facing</param>
+    /// <param name="socketDataToAddTo">The socket data to add to the valid neighbors of</param>
+    /// <param name="opposingTileComponent">The tile component that the socket id is being gotten</param>
+    private void AddOpposingSocketToValidSockets(SocketData.Sides SideBeingAddedToo, SocketData.Sides socketDirection, SocketData socketDataToAddTo, TileComponent opposingTileComponent)
     {
         // Check rotation of the opposing tile component 
-        float clockwiseRotation = rotation;
-        if (rotation < 0)
+        int opposingID;
+        SocketData.Sides otherSocketDirection = SocketData.Sides.Undecided;
+        if (opposingTileComponent != null)
         {
-            clockwiseRotation = 360 + rotation;
+            otherSocketDirection = SocketData.GetOpposingSocket(socketDirection);
+            otherSocketDirection = SocketData.RotateSidesDirection(otherSocketDirection, 4 - GetNumberOf90DegreeTurnsFromRotationAngle(opposingTileComponent.transform.rotation.eulerAngles.y));
+            opposingID = opposingTileComponent.TileData.TileSocketData.GetIdOfSide(otherSocketDirection);
+        }
+        else
+        {
+            opposingID = -1;
         }
 
-        // If it is rotated then adjust the side that must be gotten accordingly
-        if (Mathf.Round(clockwiseRotation) == 90f)
+        List<int> validNeighbourList = socketDataToAddTo.ValidNeighbours.GetValidNeighbourListForSide(SideBeingAddedToo);
+
+        if (!validNeighbourList.Contains(opposingID))
         {
-            return 1;
+            validNeighbourList.Add(opposingID);
         }
-        else if (Mathf.Round(clockwiseRotation) == 180f)
-        {
-            return 2;
-        }
-        else if (Mathf.Round(clockwiseRotation) == 270f)
-        {
-            return 3;
-        }
-        return 0;
     }
-
-    //private void FillInAreaWithTile(Vector3Int bottemLeft, Vector3Int topRight, TileComponent tileToPlace)
-    //{
-    //    int 
-    //}
-
-    //private int ConvertGridCordinateToIndex(Vector3Int GridIndex)
-    //{
-    //    int xMultiplier = gridDimensions.
-    //}
-
-
+    /// <summary>
+    /// Build up the grid of object that act as parent for tiles in each cell of the grid, adding the default prefabs as appropriate
+    /// </summary>
+    private void BuildGridObjectParents()
+    {
+        gridController = new GameObject("ExampleGrid").AddComponent<ExampleGridController>();
+        gridController.BuildGridObjectParents(gridDimensions, defaultTilePrefab);
+    }
+    #endregion
 }

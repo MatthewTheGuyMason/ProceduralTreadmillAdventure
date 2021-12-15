@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1631407464519396109
+--- !u!1 &4700886215604029692
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 129125249517462760}
-  - component: {fileID: 8956540659624364993}
-  - component: {fileID: 7326103415645357700}
+  - component: {fileID: 2491043175164007790}
+  - component: {fileID: 8209486747512151642}
+  - component: {fileID: 5815635870454677983}
   m_Layer: 0
   m_Name: GrassToSnowUpTransToRighTransTilePrototypeBackwards
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &129125249517462760
+--- !u!4 &2491043175164007790
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1631407464519396109}
+  m_GameObject: {fileID: 4700886215604029692}
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 69, y: 0, z: 3}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 3416399162977778431}
+  - {fileID: 606743880404080883}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!65 &8956540659624364993
+--- !u!65 &8209486747512151642
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1631407464519396109}
+  m_GameObject: {fileID: 4700886215604029692}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7326103415645357700
+--- !u!114 &5815635870454677983
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1631407464519396109}
+  m_GameObject: {fileID: 4700886215604029692}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -69,7 +69,7 @@ MonoBehaviour:
     tileSocketData: {fileID: 11400000, guid: 5261cf2630b0b8243b7739d8a438c4f1, type: 2}
     tileType: 2
     biomeType: -1
---- !u!1 &2392283718960730234
+--- !u!1 &7471113546948163406
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,9 +77,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3416399162977778431}
-  - component: {fileID: 2448666614206460938}
-  - component: {fileID: 416611700052550886}
+  - component: {fileID: 606743880404080883}
+  - component: {fileID: 2831959024416632410}
+  - component: {fileID: 2332072744151927862}
   m_Layer: 0
   m_Name: GrassToSnowUpTransToRighTransTileModel
   m_TagString: Untagged
@@ -87,35 +87,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3416399162977778431
+--- !u!4 &606743880404080883
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2392283718960730234}
+  m_GameObject: {fileID: 7471113546948163406}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 129125249517462760}
+  m_Father: {fileID: 2491043175164007790}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2448666614206460938
+--- !u!33 &2831959024416632410
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2392283718960730234}
+  m_GameObject: {fileID: 7471113546948163406}
   m_Mesh: {fileID: -2432090755550338912, guid: 5b72e6c6032b2c240bc92a16fbecafcd, type: 3}
---- !u!23 &416611700052550886
+--- !u!23 &2332072744151927862
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2392283718960730234}
+  m_GameObject: {fileID: 7471113546948163406}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

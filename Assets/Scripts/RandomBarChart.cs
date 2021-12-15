@@ -1,33 +1,107 @@
+//====================================================================================================================================================================================================================================================================================================================================================
+//  Name:               RandomBarChart.cs
+//  Author:             Matthew Mason
+//  Date Created:       15/12/2021
+//  Date Last Modified  15/12/2021
+//  Brief:              Script for controlling a bar graph for showing the distribution of random numbers
+//====================================================================================================================================================================================================================================================================================================================================================
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Script for controlling a bar graph for showing the distribution of random numbers
+/// </summary>
 public class RandomBarChart : MonoBehaviour
 {
-    private List<BarChartBar> barChartBars;
+    #region Public Variables
+    [SerializeField] 
+    [Tooltip("The main camera used in the scene")]
+    private Camera sceneCamera;
 
-    public GameObject barsPrefab;
+    [SerializeField]
+    [Tooltip("The range of number of display on the bar chart ")]
+    private int numberRange;
 
-    public int numberRange;
+    [SerializeField]
+    [Tooltip("The prefab used for the bars as they are shown in unity")]
+    private GameObject barsPrefab;
+    #endregion
 
-    public Camera sceneCamera;
-
-    // Start is called before the first frame update
-    void Start()
+    #region Public Properties
+    /// <summary>
+    /// The main camera used in the scene
+    /// </summary>
+    public Camera SceneCamera
     {
-        barChartBars = new List<BarChartBar>();
-        PseudoRandomNumberGenerator.seed = 78914072347890;
+        get
+        {
+            return sceneCamera;
+        }
+        set
+        {
+            sceneCamera = value;
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    /// <summary>
+    /// The range of number of display on the bar chart 
+    /// </summary>
+    public int NumberRange
     {
-        int value = System.Convert.ToInt32( PseudoRandomNumberGenerator.XorShiftStarInt() % numberRange);
+        get
+        {
+            return numberRange;
+        }
+        set
+        {
+            numberRange = value;
+        }
+    }
 
+    /// <summary>
+    /// The prefab used for the bars as they are shown in unity
+    /// </summary>
+    public GameObject BarsPrefab
+    {
+        get
+        {
+            return barsPrefab;
+        }
+        set
+        {
+            barsPrefab = value;
+        }
+    }
+
+    #endregion
+
+    #region Private Variables
+    /// <summary>
+    /// The bars used in the bar chart
+    /// </summary>
+    private List<BarChartBar> barChartBars;
+    #endregion
+
+    #region Unity Methods
+    // Start is called before the first frame update
+    private void Start()
+    {
+        barChartBars = new List<BarChartBar>();
+        XorPseudoRandomNumberGenerator.seed = 78914072347890;
+    }
+    // Update is called once per frame
+    private void Update()
+    {
+        // Get the random value
+        int value = System.Convert.ToInt32( XorPseudoRandomNumberGenerator.XorShiftStarInt() % NumberRange);
+
+        // Find the value and add to the bar, adding a new bar if none was found
         int index = -1;
         for (int i = 0; i < barChartBars.Count; ++i)
         {
-            if (value == barChartBars[i].countedValue)
+            if (value == barChartBars[i].CountedValue)
             {
                 index = i;
                 break;
@@ -39,29 +113,36 @@ public class RandomBarChart : MonoBehaviour
         }
         else
         {
-            ++barChartBars[index].count;
+            ++barChartBars[index].Count;
         }
     }
+    #endregion
 
+    #region Private Methods
+    /// <summary>
+    /// Creates a bar and add it to the bar chart
+    /// </summary>
+    /// <param name="countedValue">The value to set the bar at in the bar chart</param>
     private void CreateBar(int countedValue)
     {
-        barChartBars.Add(GameObject.Instantiate(barsPrefab).GetComponent<BarChartBar>());
-        barChartBars[barChartBars.Count - 1].countedValue = countedValue;
-        ++barChartBars[barChartBars.Count - 1].count; 
+        // Create the new bar
+        barChartBars.Add(GameObject.Instantiate(BarsPrefab).GetComponent<BarChartBar>());
+        barChartBars[barChartBars.Count - 1].CountedValue = countedValue;
+        ++barChartBars[barChartBars.Count - 1].Count; 
         barChartBars[barChartBars.Count - 1].CreateTextMesh();
-        barChartBars[barChartBars.Count - 1].textMesh.text = countedValue.ToString();
+        barChartBars[barChartBars.Count - 1].TextMesh.text = countedValue.ToString();
 
+        // Sort the bar to ascending numeric value
         List<BarChartBar> sortedBarCharts = new List<BarChartBar>(barChartBars.Count);
-
         while (barChartBars.Count > 0)
         {
             int lowestValue = int.MaxValue;
             int lowestValueIndex = -1;
             for (int i = 0; i < barChartBars.Count; ++i)
             {
-                if (lowestValue > barChartBars[i].countedValue)
+                if (lowestValue > barChartBars[i].CountedValue)
                 {
-                    lowestValue = barChartBars[i].countedValue;
+                    lowestValue = barChartBars[i].CountedValue;
                     lowestValueIndex = i;
                 }
             }
@@ -70,9 +151,11 @@ public class RandomBarChart : MonoBehaviour
         }
         barChartBars = sortedBarCharts;
 
+        // Move them all into position
         for (int i = 0; i < barChartBars.Count; ++i)
         {
             barChartBars[i].transform.position = Vector3.right * i * 4f;
         }
     }
+    #endregion
 }
