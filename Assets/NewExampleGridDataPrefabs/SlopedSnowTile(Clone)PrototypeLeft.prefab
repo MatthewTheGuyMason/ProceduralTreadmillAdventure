@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1989210239359174742
+--- !u!1 &2508748265244788934
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5281544759775767222}
-  - component: {fileID: 2619850451234404543}
-  - component: {fileID: 4729613662191837961}
+  - component: {fileID: 6480946144780919678}
+  - component: {fileID: 4901113665040547223}
+  - component: {fileID: 2211854739506087889}
   m_Layer: 0
   m_Name: SlopedSnowTile(Clone)PrototypeLeft
   m_TagString: Untagged
@@ -18,41 +18,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5281544759775767222
+--- !u!4 &6480946144780919678
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1989210239359174742}
+  m_GameObject: {fileID: 2508748265244788934}
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 34, y: 1, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 191347231367903549}
+  - {fileID: 7827323256754521997}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!65 &2619850451234404543
+--- !u!65 &4901113665040547223
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1989210239359174742}
+  m_GameObject: {fileID: 2508748265244788934}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4729613662191837961
+--- !u!114 &2211854739506087889
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1989210239359174742}
+  m_GameObject: {fileID: 2508748265244788934}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c93df86cf0054064695c6ecf296e1ce9, type: 3}
@@ -62,14 +62,14 @@ MonoBehaviour:
     id: 17
     baseTileWeights:
     - 0
-    - 0.046666667
-    - 0.046666667
-    - 0.013333334
+    - 0.04117647
+    - 0.08235294
+    - 0.023529412
     - 0
     tileSocketData: {fileID: 11400000, guid: 41c0a1749fb353347b5b6282a076377e, type: 2}
     tileType: 2
     biomeType: -2
---- !u!1 &5459728547241770792
+--- !u!1 &5576398967541687342
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,9 +77,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 191347231367903549}
-  - component: {fileID: 7460371104075346648}
-  - component: {fileID: 3607009303174366580}
+  - component: {fileID: 7827323256754521997}
+  - component: {fileID: 2485892044056868305}
+  - component: {fileID: 5107061826476664661}
   m_Layer: 0
   m_Name: SlopedSnowTileModel
   m_TagString: Untagged
@@ -87,35 +87,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &191347231367903549
+--- !u!4 &7827323256754521997
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5459728547241770792}
+  m_GameObject: {fileID: 5576398967541687342}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
   m_Children: []
-  m_Father: {fileID: 5281544759775767222}
+  m_Father: {fileID: 6480946144780919678}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7460371104075346648
+--- !u!33 &2485892044056868305
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5459728547241770792}
+  m_GameObject: {fileID: 5576398967541687342}
   m_Mesh: {fileID: -2432090755550338912, guid: d265cca19f5721e44a07c32ddbf87acc, type: 3}
---- !u!23 &3607009303174366580
+--- !u!23 &5107061826476664661
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5459728547241770792}
+  m_GameObject: {fileID: 5576398967541687342}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

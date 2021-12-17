@@ -23,7 +23,7 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
 
     public const int ProabilitySpaceLoopBreakerMultiplier = 100;
     #endregion
-
+    
     #region Private Serialized Field
     [SerializeField] [Tooltip("If the tiles representing the possibility space are instantiated as the generation goes on")]
     private bool showPossibillitySpace = true;
@@ -182,7 +182,8 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
         }
 
         // Start generation
-        progressSlider.maxValue = gridDimensions.x * gridDimensions.y * gridDimensions.z;
+        progressSlider.minValue = 0f;
+        progressSlider.maxValue = (tilesBeingPlannedEndX - tilesBeingPlannedStartX) * gridDimensions.y * gridDimensions.z;
         progressSlider.value = 0f;
         // Set up visible space
         PlaceTilesInGridArea(Vector3Int.zero, new Vector3Int(plannedTilesStartX, gridDimensions.y, gridDimensions.z));
@@ -203,7 +204,11 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
                 {
                     if (!UpdateSinglePossibilitySpaceLocation())
                     {
-                        Debug.LogError("Update single possibility space has failed in update");
+
+                        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                        Debug.LogWarning("Update single possibility space has failed in update");
+                        #endif
+                        ResetGenAttempt();
                         return;
                     }
 
@@ -401,10 +406,6 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
 
             if (possibilitySpace[coordAssesed.x][coordAssesed.y][coordAssesed.z].Count == 0)
             {
-                ResetGenAttempt();
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning("Possibility space was empty for tile at grid position:" + new Vector3Int(coordAssesed.x, coordAssesed.y, coordAssesed.z).ToString());
-                #endif
                 return false;
             }
 
@@ -478,7 +479,7 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
                 }
                 else
                 {
-                    return float.Epsilon;
+                    return 0f;
                 }
             case TileData.BiomeType.Grassland:
                 return baseWeight * weights.grasslandUnitInterval;
@@ -499,7 +500,7 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
                 }
                 else
                 {
-                    return float.Epsilon;
+                    return 0f;
                 }
             case TileData.BiomeType.Tundra:
                 return baseWeight * weights.tundraUnitInterval;
@@ -628,6 +629,7 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
                 yield return new WaitUntil(CheckPlanningComplete);
             }
             progressSlider.value = 0;
+
             tilesBeingPlannedStartX = gridDimensions.x - gridDimensions.x / 3;
             tilesBeingPlannedEndX = gridDimensions.x;
         }
@@ -1132,8 +1134,9 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
         if (!UpdatePossibilitySpaceFromPropergation())
         {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.LogError("UpdatePossibilitySpaceFromPropergation has failed in PlanTile");
+            Debug.LogWarning("UpdatePossibilitySpaceFromPropergation has failed in PlanTile");
             #endif
+            ResetGenAttempt();
             return;
         }
 
@@ -1158,7 +1161,7 @@ public class WaveFunctionCollapseTreadmill : MonoBehaviour
     private void ResetGenAttempt()
     {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.LogWarning("Reseting tiles being planned");
+        Debug.LogWarning("Resetting tiles being planned");
         #endif
 
         // Flush the possibility space update stack

@@ -64,8 +64,8 @@ MonoBehaviour:
     - 0
     - 0
     - 0
-    - 0.006666667
-    - 0.013333334
+    - 0.005882353
+    - 0.011764706
     tileSocketData: {fileID: 11400000, guid: dfbe0d8d15c19d846a9a545d1a7c526a, type: 2}
     tileType: 8
     biomeType: 2
